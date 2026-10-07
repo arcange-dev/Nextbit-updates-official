@@ -41,7 +41,7 @@ The repository includes `render.yaml` for a Render Blueprint with:
 
 For a single-service deployment, the frontend calls the backend through relative `/api` URLs, so no separate frontend API domain is required.
 
-Render supports Node web services and static sites; web services must bind to `0.0.0.0`. Free services are useful for testing but Render notes that free web services spin down after inactivity and are not recommended for production workloads. citeturn197304search0turn197304search3turn197304search9
+Render supports Node web services and static sites; web services must bind to `0.0.0.0`. Free services are useful for testing but Render notes that free web services spin down after inactivity and are not recommended for production workloads.
 
 ## Environment variables
 Copy `.env.example` for local development. Never commit real database URLs, JWT secrets or AI/API keys.
