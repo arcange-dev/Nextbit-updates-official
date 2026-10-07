@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from "react";
+import React,{useEffect,useRef,useState} from "react";
 import {api} from "./api";
 import {ArrowRight,Bookmark,Bot,Check,Code2,Globe2,Menu,Search,ShieldCheck,User,X,Zap} from "lucide-react";
 type Route="home"|"news"|"article"|"roadmaps"|"roadmap"|"build"|"project"|"africa"|"profile"|"bookmarks"|"notifications"|"search"|"about"|"contact"|"privacy"|"terms"|"settings"|"login"|"register"|"admin"|"editor"|"sources"|"users"|"moderation"|"analytics"|"newsletter";
