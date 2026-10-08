@@ -53,7 +53,7 @@ function TechCanvas(){
   useEffect(()=>{
     const canvas=ref.current;if(!canvas)return;
     const ctx=canvas.getContext("2d");if(!ctx)return;
-    let frame=0;let particles:Array<{x:number;y:number:vx:number;vy:number;r:number;a:number}>=[];
+    let frame=0;let particles:Array<{x:number;y:number;vx:number;vy:number;r:number;a:number}>=[];
     const resize=()=>{
       const box=canvas.getBoundingClientRect();const dpr=Math.min(window.devicePixelRatio||1,2);
       canvas.width=Math.max(1,Math.floor(box.width*dpr));canvas.height=Math.max(1,Math.floor(box.height*dpr));
