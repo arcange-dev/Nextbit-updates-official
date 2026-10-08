@@ -12,17 +12,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: nextbit-updates-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         sync: false
       - key: ADMIN_EMAIL
         sync: false
 
-databases:
-  - name: nextbit-updates-db
-    region: frankfurt
-    plan: free
-    databaseName: nextbit_updates
-    user: nextbit_app
