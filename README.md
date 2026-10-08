@@ -24,6 +24,9 @@ NextBit is **not a teaching/course platform**. It is a technology intelligence p
 - Health endpoint: `GET /api/health`
 - Search endpoint: `GET /api/search?q=...`
 
+## Admin panel
+The admin console is protected by the backend. Set `ADMIN_EMAIL` in Render, register an account with that exact email, then sign in and open `/#/admin`. On backend startup, that email is promoted to the `admin` role. The admin console includes live overview metrics and article create/edit/publish/delete workflows.
+
 ## Render deployment
 The repository includes `render.yaml` for a Render Blueprint with:
 - One Node web service serving both the Vite frontend and Express API
