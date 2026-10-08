@@ -4,6 +4,7 @@ const authHeaders=(token:string)=>({Authorization:`Bearer ${token}`});
 export const api={
 health:()=>request("/health"),
 articles:(q="")=>request(`/articles${q?`?q=${encodeURIComponent(q)}`:""}`),
+article:(id:string)=>request(`/articles/${encodeURIComponent(id)}`),
 roadmaps:()=>request("/roadmaps"),
 projects:()=>request("/projects"),
 trending:(topic="all",limit=60,refresh=false)=>request(`/trending?topic=${encodeURIComponent(topic)}&limit=${limit}&refresh=${refresh?1:0}`),
