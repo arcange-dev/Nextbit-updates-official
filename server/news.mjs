@@ -1,4 +1,4 @@
-import Parser from "rss-parser";
+import Parser from "rss-parser";import{hasDatabase,q}from"./db.mjs";
 
 const parser=new Parser({timeout:12000,customFields:{item:[["media:content","media:content",{keepArray:false}],["media:thumbnail","media:thumbnail",{keepArray:false}]]}});
 const GOOGLE=(q)=>`https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`;
@@ -24,5 +24,30 @@ const classify=(title="",summary="")=>{const text=(title+" "+summary).toLowerCas
 const parseDate=(value)=>{const d=value?new Date(value):new Date();return Number.isNaN(d.getTime())?new Date():d};
 const normalize=({item,feed})=>{const title=strip(item.title||"Untitled technology story");const summary=strip(item.contentSnippet||item.content||item.summary||"").slice(0,500);const url=item.link||item.guid||"";const publishedAt=parseDate(item.isoDate||item.pubDate);return{id:`${feed.id}:${Buffer.from(url||title).toString("base64url").slice(0,30)}`,title,summary,url,publishedAt:publishedAt.toISOString(),source:feed.name,sourceType:feed.type,feedId:feed.id,topic:classify(title,summary),feedTopic:feed.topic,image:imageFrom(item),domain:domain(url)}};
 let cache={at:0,items:[],errors:[]};
-export async function getTrending({topic="all",limit=60,refresh=false}={}){const now=Date.now();if(!refresh&&cache.items.length&&now-cache.at<5*60*1000){return{items:filter(cache.items,topic).slice(0,limit),updatedAt:new Date(cache.at).toISOString(),errors:cache.errors}}const results=await Promise.allSettled(NEWS_FEEDS.map(async feed=>{const parsed=await parser.parseURL(feed.url);return parsed.items.map(item=>normalize({item,feed}))}));const items=[];const errors=[];for(let i=0;i<results.length;i++){const r=results[i];if(r.status==="fulfilled")items.push(...r.value);else errors.push({feed:NEWS_FEEDS[i].name,topic:NEWS_FEEDS[i].topic,error:String(r.reason?.message||r.reason)})}const unique=new Map();for(const item of items){const key=(item.url||item.title).toLowerCase();if(!unique.has(key))unique.set(key,item)}const sorted=[...unique.values()].sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));cache={at:now,items:sorted,errors};return{items:filter(sorted,topic).slice(0,limit),updatedAt:new Date(now).toISOString(),errors}};
+export async function getTrending({topic="all",limit=60,refresh=false}={}){const now=Date.now();if(!refresh&&cache.items.length&&now-cache.at<5*60*1000){const live=filter(cache.items,topic).slice(0,limit);if(live.length){return{items:live,updatedAt:new Date(cache.at).toISOString(),errors:cache.errors}}const cached=await getCachedNews({topic,limit});return{items:cached,updatedAt:cached.length?(cached[0]?.publishedAt||new Date().toISOString()):new Date(cache.at||Date.now()).toISOString(),errors:cache.errors}}const results=await Promise.allSettled(NEWS_FEEDS.map(async feed=>{const parsed=await parser.parseURL(feed.url);return parsed.items.map(item=>normalize({item,feed}))}));const items=[];const errors=[];for(let i=0;i<results.length;i++){const r=results[i];if(r.status==="fulfilled")items.push(...r.value);else errors.push({feed:NEWS_FEEDS[i].name,topic:NEWS_FEEDS[i].topic,error:String(r.reason?.message||r.reason)})}const unique=new Map();for(const item of items){const key=(item.url||item.title).toLowerCase();if(!unique.has(key))unique.set(key,item)}const sorted=[...unique.values()].sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));cache={at:now,items:sorted,errors};return{items:filter(sorted,topic).slice(0,limit),updatedAt:new Date(now).toISOString(),errors}};
 function filter(items,topic){if(!topic||topic==="all")return items;const needle=topic.toLowerCase();return items.filter(x=>x.topic.toLowerCase()===needle||x.feedTopic.toLowerCase()===needle)};
+
+
+export async function syncTrendingToDb(items=[]){
+  if(!hasDatabase()||!items.length)return 0;
+  let saved=0;
+  for(const item of items){
+    if(!item.url)continue;
+    try{
+      await q("INSERT INTO news_items(id,canonical_url,title,summary,category,source_name,source_type,published_at,image_url) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(canonical_url) DO UPDATE SET title=EXCLUDED.title,summary=EXCLUDED.summary,category=EXCLUDED.category,source_name=EXCLUDED.source_name,source_type=EXCLUDED.source_type,published_at=EXCLUDED.published_at,image_url=EXCLUDED.image_url,fetched_at=NOW()",
+        [item.id,item.url,item.title,item.summary,item.topic,item.source,item.sourceType,item.publishedAt,item.image||null]);
+      saved++;
+    }catch(error){console.warn("[NextBit] news cache write failed",error?.message||error)}
+  }
+  return saved;
+}
+export async function getCachedNews({topic="all",limit=60}={}){
+  if(!hasDatabase())return[];
+  try{
+    const params=[limit];
+    let where="";
+    if(topic&&topic!=="all"){where=" WHERE category=$2";params.push(topic)}
+    const r=await q("SELECT id,canonical_url AS url,title,summary,category AS topic,source_name AS source,source_type AS sourceType,published_at AS publishedAt,image_url AS image FROM news_items"+where+" ORDER BY published_at DESC LIMIT $1",params);
+    return r.rows;
+  }catch(error){console.warn("[NextBit] cached news read failed",error?.message||error);return[]}
+}
