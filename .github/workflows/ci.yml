@@ -18,6 +18,6 @@ jobs:
       - name: Install
         run: npm install
       - name: Check backend syntax
-        run: node --check server/index.mjs && node --check server/db.mjs && node --check server/data.mjs
+        run: node --check server/index.mjs && node --check server/db.mjs && node --check server/data.mjs && node --check server/news.mjs
       - name: Build frontend
         run: npm run build
