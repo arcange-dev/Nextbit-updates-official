@@ -64,3 +64,6 @@ Backend + production build:
 npm run build
 npm start
 ```
+
+## Supabase PostgreSQL
+The production backend can use Supabase Postgres through `DATABASE_URL`. The repository includes `supabase/schema.sql`, `supabase/seed.sql` and `docs/SUPABASE_RENDER_SETUP.md` for the full connection and migration procedure. Render no longer provisions a second database for this service.
