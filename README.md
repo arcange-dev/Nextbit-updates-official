@@ -24,6 +24,10 @@ NextBit is **not a teaching/course platform**. It is a technology intelligence p
 - Health endpoint: `GET /api/health`
 - Search endpoint: `GET /api/search?q=...`
 
+
+## Live news intelligence
+The newsroom now aggregates live headlines through RSS feeds from Google News searches plus selected publisher/official feeds. The backend deduplicates stories, classifies them into technology topics, sorts by publication time, caches the result for five minutes, and keeps the source URL visible so readers can open the original report. The current feed registry includes Google News topic searches, TechCrunch, The Verge, Ars Technica, WIRED and NVIDIA. Feed availability and reuse rules belong to each publisher; NextBit should display feed-provided headlines/snippets with clear attribution and links rather than republishing full articles. TechCrunch, for example, explicitly requires attribution and a link back to the full article when using its RSS feed. citeturn944568search2turn944568search3turn944568search1turn944568search0turn801521search0
+
 ## Admin panel
 The admin console is protected by the backend. Set `ADMIN_EMAIL` in Render, register an account with that exact email, then sign in and open `/#/admin`. On backend startup, that email is promoted to the `admin` role. The control plane includes live database/API health, content management, article publishing workflow, user role/status controls, editorial inbox, source registry, audit trail and platform metrics.
 
