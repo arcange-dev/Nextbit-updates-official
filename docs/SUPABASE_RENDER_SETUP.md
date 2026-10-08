@@ -91,7 +91,7 @@ Keep `supabase/schema.sql` in version control. Supabase documents schema/migrati
 
 Set these two Render secrets:
 
-ADMIN_EMAIL=the-email-you-want-to-use-for-admin-login
+ADMIN_EMAIL=admin@nextbitupdates.com
 ADMIN_PASSWORD=NextBitAdmin@2026!
 
 On backend startup, when ADMIN_EMAIL and ADMIN_PASSWORD are present, NextBit provisions that account as an active administrator. If the account already exists, the configured password is applied to it. The password is stored as a bcrypt hash in PostgreSQL; the plaintext password is never stored in the database or repository.
