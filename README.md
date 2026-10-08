@@ -25,7 +25,7 @@ NextBit is **not a teaching/course platform**. It is a technology intelligence p
 - Search endpoint: `GET /api/search?q=...`
 
 ## Admin panel
-The admin console is protected by the backend. Set `ADMIN_EMAIL` in Render, register an account with that exact email, then sign in and open `/#/admin`. On backend startup, that email is promoted to the `admin` role. The admin console includes live overview metrics and article create/edit/publish/delete workflows.
+The admin console is protected by the backend. Set `ADMIN_EMAIL` in Render, register an account with that exact email, then sign in and open `/#/admin`. On backend startup, that email is promoted to the `admin` role. The control plane includes live database/API health, content management, article publishing workflow, user role/status controls, editorial inbox, source registry, audit trail and platform metrics.
 
 ## Render deployment
 The repository includes `render.yaml` for a Render Blueprint with:
