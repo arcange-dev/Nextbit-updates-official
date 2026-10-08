@@ -86,3 +86,14 @@ npm start
 
 ## 10. Database maintenance
 Keep `supabase/schema.sql` in version control. Supabase documents schema/migration workflows for keeping schema definitions reproducible. citeturn893303search6
+
+## Easy administrator setup
+
+Set these two Render secrets:
+
+ADMIN_EMAIL=the-email-you-want-to-use-for-admin-login
+ADMIN_PASSWORD=NextBitAdmin@2026!
+
+On backend startup, when ADMIN_EMAIL and ADMIN_PASSWORD are present, NextBit provisions that account as an active administrator. If the account already exists, the configured password is applied to it. The password is stored as a bcrypt hash in PostgreSQL; the plaintext password is never stored in the database or repository.
+
+Do not commit ADMIN_PASSWORD to GitHub. Set it only in Render Environment Variables.
