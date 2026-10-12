@@ -28,5 +28,15 @@ adminActivity:(token:string)=>request("/admin/activity",{headers:authHeaders(tok
 refreshTrending:(token:string)=>request("/admin/trending/refresh",{method:"POST",headers:authHeaders(token)}),
 createArticle:(token:string,payload:unknown)=>request("/admin/articles",{method:"POST",headers:authHeaders(token),body:JSON.stringify(payload)}),
 updateArticle:(token:string,id:string,payload:unknown)=>request(`/admin/articles/${encodeURIComponent(id)}`,{method:"PUT",headers:authHeaders(token),body:JSON.stringify(payload)}),
-deleteArticle:(token:string,id:string)=>request(`/admin/articles/${encodeURIComponent(id)}`,{method:"DELETE",headers:authHeaders(token)})
+deleteArticle:(token:string,id:string)=>request(`/admin/articles/${encodeURIComponent(id)}`,{method:"DELETE",headers:authHeaders(token)}),
+// ---- Feature layer: AI, directory, events, votes, status, trends ----
+aiTldr:(text:string)=>request("/ai/tldr",{method:"POST",body:JSON.stringify({text})}),
+aiChat:(messages:{role:string;content:string}[],articleContext?:string)=>request("/ai/chat",{method:"POST",body:JSON.stringify({messages,articleContext})}),
+aiExplain:(code:string,language?:string)=>request("/ai/explain",{method:"POST",body:JSON.stringify({code,language})}),
+tools:()=>request("/tools"),
+events:()=>request("/events"),
+castVote:(target:string,kind:"story"|"tool",value:1|-1,voter:string)=>request("/vote",{method:"POST",body:JSON.stringify({target,kind,value,voter})}),
+votes:(kind:"story"|"tool",targets:string[],voter:string)=>request(`/votes?kind=${kind}&targets=${encodeURIComponent(targets.join(","))}&voter=${encodeURIComponent(voter)}`),
+status:()=>request("/status"),
+trends:()=>request("/trends")
 };

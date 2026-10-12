@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="HARDWARE / SILICON">
+ <defs>
+  <linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#15151a"/><stop offset=".55" stop-color="#08080b"/><stop offset="1" stop-color="#111016"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#ff6a00" stop-opacity=".3"/><stop offset="1" stop-color="#ff6a00" stop-opacity="0"/></radialGradient>
+  <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#fff" stroke-opacity=".06" stroke-width="1"/></pattern>
+ </defs>
+ <rect width="640" height="360" fill="url(#base)"/>
+ <rect width="640" height="360" fill="url(#glow)"/>
+ <circle cx="500" cy="60" r="180" fill="#3b82f6" opacity=".06"/>
+ <rect width="640" height="360" fill="url(#grid)"/>
+ <path d="M0 310H640" stroke="#ff6a00" stroke-opacity=".3"/>
+ <rect x="235" y="100" width="170" height="150" rx="18" fill="#111827" stroke="#ff8b3d" stroke-width="3"/><rect x="262" y="127" width="116" height="96" rx="10" fill="#ff6a00" fill-opacity=".12" stroke="#ffb17b" stroke-opacity=".65"/><path d="M270 82v18m30-18v18m30-18v18m30-18v18m30-18v18M270 250v18m30-18v18m30-18v18m30-18v18m30-18v18M217 125h18m-18 30h18m-18 30h18m-18 30h18m170-90h18m-18 30h18m-18 30h18m-18 30h18" stroke="#ff9552" stroke-width="4" stroke-linecap="round"/><path d="M291 160h58m-58 20h58m-58 20h32" stroke="#fff" stroke-opacity=".75" stroke-width="4" stroke-linecap="round"/>
+ <text x="30" y="318" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="3" fill="#ff6a00">HARDWARE / SILICON</text>
+ <text x="30" y="339" font-family="Arial,sans-serif" font-size="9" letter-spacing="2" fill="#a1a1aa">NEXTBIT UPDATES / TECHNOLOGY INTELLIGENCE</text>
+</svg>

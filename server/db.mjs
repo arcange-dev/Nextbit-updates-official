@@ -29,4 +29,35 @@ if(process.env.ADMIN_EMAIL){
   }
 }if(ac.rows[0].c===0)for(const a of ARTICLES)await q("INSERT INTO articles(id,slug,category,title,summary,image_url,body,author,status,verified,published_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW()) ON CONFLICT DO NOTHING",[a.id,a.slug,a.category,a.title,a.summary,a.image_url,"Technology intelligence article body.","NextBit Desk","published",a.verified]);
 const rc=await q("SELECT COUNT(*)::int AS c FROM roadmaps");if(rc.rows[0].c===0)for(const r of ROADMAPS)await q("INSERT INTO roadmaps(id,title,group_name,description,stages) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",[r.id,r.title,r.group,r.description,JSON.stringify(r.stages)]);
-const pc=await q("SELECT COUNT(*)::int AS c FROM projects");if(pc.rows[0].c===0)for(const p of PROJECTS)await q("INSERT INTO projects(id,title,tech,level,duration,parts,image_url) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING",[p.id,p.title,p.tech,p.level,p.duration,p.parts,p.image_url]);return true}
+const pc=await q("SELECT COUNT(*)::int AS c FROM projects");if(pc.rows[0].c===0)for(const p of PROJECTS)await q("INSERT INTO projects(id,title,tech,level,duration,parts,image_url) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING",[p.id,p.title,p.tech,p.level,p.duration,p.parts,p.image_url]);await initFeatureTables();return true}
+// ---- Feature tables (AI directory, votes, tech events) ----
+// Idempotent migration, runs on every boot like the tables above.
+export async function initFeatureTables(){
+  await q(`CREATE TABLE IF NOT EXISTS ai_tools(id TEXT PRIMARY KEY,name TEXT NOT NULL,category TEXT NOT NULL,description TEXT NOT NULL,url TEXT NOT NULL UNIQUE,tags TEXT[] NOT NULL DEFAULT '{}',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE TABLE IF NOT EXISTS votes(target_id TEXT NOT NULL,kind TEXT NOT NULL CHECK (kind IN ('story','tool')),voter TEXT NOT NULL,value INT NOT NULL CHECK (value IN (-1,1)),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),PRIMARY KEY (target_id,kind,voter));
+  CREATE INDEX IF NOT EXISTS votes_target_idx ON votes (kind, target_id);
+  CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,title TEXT NOT NULL,kind TEXT NOT NULL,url TEXT,location TEXT,starts_at TIMESTAMPTZ NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
+  const tc=await q("SELECT COUNT(*)::int AS c FROM ai_tools");
+  if(tc.rows[0].c===0){
+    const tools=[["gpt-4o","GPT-4o","LLM","OpenAI's flagship multimodal model for text, vision and audio reasoning.","https://openai.com/gpt-4o",["api","multimodal"]],
+    ["claude","Claude","LLM","Anthropic's assistant family, strong at long-context reasoning and code.","https://claude.ai",["api","agents"]],
+    ["ollama","Ollama","Local LLM","Run open models like Llama and Mistral locally with a one-line install.","https://ollama.com",["local","open-source"]],
+    ["cursor","Cursor","Coding","AI-first code editor with repo-aware autocomplete and agent edits.","https://cursor.com",["ide","agents"]],
+    ["pytorch","PyTorch","ML Framework","The dominant deep-learning framework for research and production.","https://pytorch.org",["python","training"]],
+    ["huggingface","Hugging Face","Model Hub","The central repository for open models, datasets and inference APIs.","https://huggingface.co",["models","datasets"]],
+    ["langchain","LangChain","Agents","Framework for building LLM applications, RAG pipelines and tool-using agents.","https://langchain.com",["rag","orchestration"]],
+    ["vllm","vLLM","Serving","High-throughput LLM inference server with PagedAttention.","https://docs.vllm.ai",["inference","production"]],
+    ["midjourney","Midjourney","Image","State-of-the-art image generation for creative and editorial workflows.","https://midjourney.com",["image","creative"]],
+    ["whisper","Whisper","Speech","OpenAI's open-source speech-to-text, runs locally in many languages.","https://github.com/openai/whisper",["audio","open-source"]]];
+    for(const[id,name,category,description,url,tags]of tools)await q("INSERT INTO ai_tools(id,name,category,description,url,tags) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING",[id,name,category,description,url,tags]);
+  }
+  const ec=await q("SELECT COUNT(*)::int AS c FROM events");
+  if(ec.rows[0].c===0){
+    const events=[["foss4g-2026","FOSS4G Africa","Conference","https://foss4g.africa","Kigali, Rwanda","2026-11-18T08:00:00Z"],
+    ["ai-everything-2026","AI Everything Summit","Conference","https://ai-everything.com","Dubai, UAE","2026-12-08T08:00:00Z"],
+    ["hackrwanda-2026","HackRwanda 48h Hackathon","Hackathon","https://hackrwanda.dev","Kigali, Rwanda","2026-11-06T09:00:00Z"],
+    ["websummit-2026","Web Summit","Conference","https://websummit.com","Lisbon, Portugal","2026-11-02T08:00:00Z"],
+    ["ces-2027","CES 2027","Release","https://ces.tech","Las Vegas, USA","2027-01-06T08:00:00Z"]];
+    for(const[id,title,kind,url,location,starts_at]of events)await q("INSERT INTO events(id,title,kind,url,location,starts_at) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING",[id,title,kind,url,location,starts_at]);
+  }
+}

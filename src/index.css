@@ -10,6 +10,10 @@
   --color-orange:#ff6a00;
   --color-orange2:#ff9a52;
   --ease:cubic-bezier(.22,1,.36,1);
+  /* Feature accents: neon green / cyan / purple on top of the NextBit orange */
+  --color-neon:#00ff9d;
+  --color-cyber:#22d3ee;
+  --color-plasma:#a855f7;
 }
 *{box-sizing:border-box}
 html{background:#050505;color:#fff;scroll-behavior:smooth}
@@ -145,3 +149,10 @@ header nav button:hover::after,header nav button:focus-visible::after{right:0}
   .article-image img{transition:none}
   .glass-card:hover{transform:none}
 }
+
+/* ---- Futuristic feature utilities ---- */
+.glow-neon{box-shadow:0 0 24px rgba(0,255,157,.22)}
+.glow-cyber{box-shadow:0 0 24px rgba(34,211,238,.18)}
+.glow-plasma{box-shadow:0 0 24px rgba(168,85,247,.2)}
+.shiki-block pre{margin:0;background:transparent!important}
+.shiki-block .line{display:block}

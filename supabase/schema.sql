@@ -55,3 +55,35 @@ alter table public.analytics_events enable row level security;
 alter table public.sources enable row level security;
 alter table public.admin_actions enable row level security;
 alter table public.news_items enable row level security;
+
+-- ---- Feature layer: AI tools directory, votes, tech events ----
+create table if not exists public.ai_tools (
+  id text primary key,
+  name text not null,
+  category text not null,
+  description text not null,
+  url text not null unique,
+  tags text[] not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+-- One vote per (target, kind, voter): the primary key makes double-voting impossible.
+create table if not exists public.votes (
+  target_id text not null,
+  kind text not null check (kind in ('story','tool')),
+  voter text not null,
+  value int not null check (value in (-1,1)),
+  created_at timestamptz not null default now(),
+  primary key (target_id, kind, voter)
+);
+create index if not exists votes_target_idx on public.votes (kind, target_id);
+
+create table if not exists public.events (
+  id text primary key,
+  title text not null,
+  kind text not null,
+  url text,
+  location text,
+  starts_at timestamptz not null,
+  created_at timestamptz not null default now()
+);

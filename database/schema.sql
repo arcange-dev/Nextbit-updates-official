@@ -9,3 +9,35 @@ CREATE TABLE IF NOT EXISTS analytics_events(id BIGSERIAL PRIMARY KEY,user_id BIG
 
 CREATE TABLE IF NOT EXISTS sources(id BIGSERIAL PRIMARY KEY,name TEXT NOT NULL,url TEXT NOT NULL UNIQUE,reliability TEXT NOT NULL DEFAULT 'unverified',verification_notes TEXT,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 CREATE TABLE IF NOT EXISTS admin_actions(id BIGSERIAL PRIMARY KEY,admin_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,action TEXT NOT NULL,target_type TEXT,target_id TEXT,metadata JSONB,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+
+-- ---- Feature layer: AI tools directory, votes, tech events ----
+create table if not exists public.ai_tools (
+  id text primary key,
+  name text not null,
+  category text not null,
+  description text not null,
+  url text not null unique,
+  tags text[] not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+-- One vote per (target, kind, voter): the primary key makes double-voting impossible.
+create table if not exists public.votes (
+  target_id text not null,
+  kind text not null check (kind in ('story','tool')),
+  voter text not null,
+  value int not null check (value in (-1,1)),
+  created_at timestamptz not null default now(),
+  primary key (target_id, kind, voter)
+);
+create index if not exists votes_target_idx on public.votes (kind, target_id);
+
+create table if not exists public.events (
+  id text primary key,
+  title text not null,
+  kind text not null,
+  url text,
+  location text,
+  starts_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
