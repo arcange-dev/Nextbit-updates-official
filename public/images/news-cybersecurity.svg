@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="CYBERSECURITY">
+ <defs>
+  <linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#15151a"/><stop offset=".55" stop-color="#08080b"/><stop offset="1" stop-color="#111016"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#ff6a00" stop-opacity=".3"/><stop offset="1" stop-color="#ff6a00" stop-opacity="0"/></radialGradient>
+  <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#fff" stroke-opacity=".06" stroke-width="1"/></pattern>
+ </defs>
+ <rect width="640" height="360" fill="url(#base)"/>
+ <rect width="640" height="360" fill="url(#glow)"/>
+ <circle cx="500" cy="60" r="180" fill="#14b8a6" opacity=".06"/>
+ <rect width="640" height="360" fill="url(#grid)"/>
+ <path d="M0 310H640" stroke="#ff6a00" stroke-opacity=".3"/>
+ <path d="M320 80l105 40v75c0 72-49 121-105 145-56-24-105-73-105-145v-75z" fill="#ff6a00" fill-opacity=".1" stroke="#ff9552" stroke-width="3"/><path d="M320 120l65 25v52c0 48-28 82-65 103-37-21-65-55-65-103v-52z" fill="none" stroke="#ff9552" stroke-opacity=".7" stroke-width="2"/><path d="M284 196l24 24 51-56" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><g stroke="#14b8a6" stroke-width="2" stroke-opacity=".6"><path d="M150 125h60M430 125h60M160 250h55M425 250h55M190 175h28m204 0h28"/></g>
+ <text x="30" y="318" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="3" fill="#ff6a00">CYBERSECURITY</text>
+ <text x="30" y="339" font-family="Arial,sans-serif" font-size="9" letter-spacing="2" fill="#a1a1aa">NEXTBIT UPDATES / TECHNOLOGY INTELLIGENCE</text>
+</svg>
