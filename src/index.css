@@ -160,3 +160,6 @@ header nav button:hover::after,header nav button:focus-visible::after{right:0}
 /* Rotating 3D AI chip (hero) */
 @keyframes spinY{from{transform:rotateX(62deg) rotateZ(0deg)}to{transform:rotateX(62deg) rotateZ(360deg)}}
 @keyframes pulse-o{0%,100%{opacity:.55}50%{opacity:1}}
+
+/* First-load welcome screen */
+@keyframes loadbar{from{transform:scaleX(.08)}to{transform:scaleX(1)}}
