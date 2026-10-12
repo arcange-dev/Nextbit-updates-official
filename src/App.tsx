@@ -6,7 +6,7 @@ import GithubTrends from "./components/GithubTrends";
 import CommandPalette,{type NavItem} from "./components/CommandPalette";
 import ReadingProgress from "./components/ReadingProgress";
 import UpvoteButton from "./components/UpvoteButton";
-import {ArrowLeft,ArrowRight,Bookmark,Check,Code2,Globe2,Menu,Search,Share2,ShieldCheck,User,X,Zap} from "lucide-react";
+import {Activity,ArrowLeft,ArrowRight,Bookmark,Check,Code2,ExternalLink,FilePlus2,Globe2,ImagePlus,Menu,RefreshCw,Rss,Search,Share2,ShieldCheck,User,X,Zap} from "lucide-react";
 import Chip3D from "./components/Chip3D";
 import ErrorBoundary,{NotFound} from "./components/ErrorBoundary";
 import {AuthProvider,useAuth} from "./lib/auth";
