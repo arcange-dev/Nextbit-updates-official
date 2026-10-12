@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Footer, Loader, Nav, Newsletter, SearchOverlay } from './Chrome'
-import { AfricaSection, AskAI, Breaking, Electronics, Hero, LearnPaths, Projects, Rwanda, Software, Ticker, Trending, UnderstandBit } from './Home'
+import { AfricaSection, Breaking, Electronics, Hero, LearnPaths, Projects, Rwanda, Software, Ticker, Trending } from './Home'
 import { AuthPage, BookmarksPage, DesignSystem, ErrorsPage, NotificationsPage, TutorialsPage } from './Extra'
 import { AdminPage, AfricaPage, ArticlePage, BuildPage, LearnPage, NewsPage, NotFound, PageHead, ProfilePage, ProjectsPage } from './Pages'
-import { Eyebrow, type View } from './ui'
-import AIDirectory from './components/AIDirectory'
-import EventCalendar from './components/EventCalendar'
-import ChatAssistant from './components/ChatAssistant'
+import { type View } from './ui'
+import LLMStatsHub from './components/LLMStatsHub'
 
 const VIEWS: View[] = ['home', 'news', 'article', 'learn', 'build', 'projects', 'africa', 'profile', 'admin', 'notfound', 'login', 'register', 'design', 'errors', 'bookmarks', 'notifications', 'tutorials', 'directory']
 
@@ -73,17 +71,10 @@ export default function App() {
             <Ticker />
             <Breaking go={go} saved={saved} toggle={toggle} />
             <Trending />
-            <UnderstandBit />
-            <AskAI />
             <Software />
             <Electronics />
             <Projects go={go} />
             <LearnPaths />
-            <section className="mx-auto max-w-[1440px] px-5 py-20 lg:px-10">
-              <Eyebrow>Dev radar</Eyebrow>
-              <h2 className="mt-4 font-display text-4xl font-bold sm:text-6xl">Hackathons, releases & meetups.</h2>
-              <div className="mt-8"><EventCalendar /></div>
-            </section>
             <AfricaSection go={go} />
             <Rwanda />
           </>
@@ -92,8 +83,8 @@ export default function App() {
         {view === 'article' && <ArticlePage id={id} go={go} saved={saved} toggle={toggle} />}
         {view === 'directory' && (
           <>
-            <PageHead eye="Dev tools" title={<>Live AI <span className="text-orange">directory.</span></>} sub="Track and upvote the AI tools that matter — LLMs, coding agents, local models and serving engines." />
-            <div className="mx-auto max-w-[1440px] px-5 py-10 lg:px-10"><AIDirectory /></div>
+            <PageHead eye="Live from llm-stats.com" title={<>AI NEWS <span className="text-orange">& MODELS.</span></>} sub="Cloned live from llm-stats.com — the day's AI headlines plus 400+ models with pricing, context windows and throughput. Verify anything on the source site." />
+            <div className="py-10"><LLMStatsHub /></div>
           </>
         )}
         {view === 'learn' && <LearnPage />}
@@ -113,7 +104,6 @@ export default function App() {
       </main>
       {!bare && view !== 'admin' && <Newsletter />}
       {view !== 'admin' && view !== 'login' && view !== 'register' && <Footer go={go} />}
-      <ChatAssistant />
     </div>
   )
 }

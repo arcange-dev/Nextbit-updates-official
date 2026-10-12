@@ -21,12 +21,6 @@ services:
         sync: false
       - key: ADMIN_RESET_TOKEN
         sync: false
-      - key: NEXTBIT_AI_ENDPOINT
-        sync: false
-      - key: NEXTBIT_AI_KEY
-        sync: false
-      - key: NEXTBIT_AI_MODEL
-        sync: false
       - key: GITHUB_TOKEN
         sync: false
 

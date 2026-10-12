@@ -1,11 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { api } from './api'
-import ArticleTldr from './components/ArticleTldr'
 import CodeBlock from './components/CodeBlock'
 import UpvoteButton from './components/UpvoteButton'
 import StatusBoard from './components/StatusBoard'
 import GithubTrends from './components/GithubTrends'
-import { setChatContext } from './lib/chatContext'
 import { ARTICLES, IMG, PROJECTS } from './data'
 import { AfricaMap, ArticleMeta, Electronics, LearnPaths, ProjectCard, Rwanda, Software, UnderstandBit } from './Home'
 import { Btn, Chip3D, CountUp, Eyebrow, Icon, Reveal, Verified, type View } from './ui'
@@ -126,10 +124,6 @@ export function ArticlePage({ id, go, saved, toggle }: { id: string; go: Go; sav
       .catch(() => {})
     return () => { active = false }
   }, [id])
-  useEffect(() => {
-    setChatContext(real ? [real.title, real.summary, realBody].filter(Boolean).join('\n\n') : '')
-    return () => setChatContext('')
-  }, [real, realBody])
   const mock = ARTICLES.find((x) => x.id === id) ?? ARTICLES[0]
   const a = real
     ? { id: real.id, cat: real.category || 'Technology', title: real.title, sub: real.summary,

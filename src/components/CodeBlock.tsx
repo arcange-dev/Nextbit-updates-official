@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Check, Copy, FileCode2 } from "lucide-react";
-import CodeExplainer from "./CodeExplainer";
 
 // Syntax-highlighted code block with one-click copy and AI explain.
 // The Shiki highlighter is loaded lazily ONCE for the whole app (module-level
@@ -42,7 +41,6 @@ export default function CodeBlock({ code, language = "ts", title }: { code: stri
         <FileCode2 size={13} className="text-cyber" aria-hidden />
         <span className="font-mono text-[10px] uppercase tracking-[.15em] text-zinc-500">{title || lang}</span>
         <span className="ml-auto flex items-center gap-2">
-          <CodeExplainer code={code} language={lang} />
           <button
             onClick={copy}
             aria-label={copied ? "Copied" : "Copy code"}

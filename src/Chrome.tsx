@@ -24,7 +24,7 @@ const LINKS: { l: string; v: View }[] = [
   { l: 'Build', v: 'build' },
   { l: 'Africa Tech', v: 'africa' },
   { l: 'Projects', v: 'projects' },
-  { l: 'AI Tools', v: 'directory' },
+  { l: 'AI News', v: 'directory' },
 ]
 
 export function Nav({ view, go, openSearch, saved }: { view: View; go: (v: View, id?: string) => void; openSearch: () => void; saved: number }) {
