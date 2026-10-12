@@ -135,9 +135,7 @@ function LiveTrending({compact=false}:{compact?:boolean}){
     body=<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{items.map(item=>{
       const openSource=()=>window.open(item.url,"_blank","noopener,noreferrer");
       return <div key={item.id} role="link" tabIndex={0} onClick={openSource} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openSource()}}} className="glass-card group cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-orange/50">
-        <div className="h-40 overflow-hidden bg-black/30">
-          {item.image?<img src={item.image} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-105"/>:<div className="grid h-full place-items-center text-orange/50"><Bot size={34}/></div>}
-        </div>
+        <div className="editorial-image h-40"><ArticleImage src={item.image} category={item.topic} title={item.title} alt={item.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-105"/></div>
         <div className="p-5">
           <div className="flex flex-wrap gap-2 font-mono text-[9px] uppercase tracking-[.15em]">
             <span className="text-orange">{item.topic}</span>
