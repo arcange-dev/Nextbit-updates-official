@@ -76,6 +76,7 @@ app.use("/api",(await import("./features.mjs")).default);
 app.use("/api",(await import("./llmstats.mjs")).default);
 app.use("/api",(await import("./github.mjs")).default);
 app.use("/api",(await import("./community.mjs")).default);
+app.use("/api",(await import("./platform.mjs")).default);
 app.use("/api",(await import("./oauth.mjs")).default);
 // Shareable article URLs with dynamic OpenGraph/Twitter meta.
 // The SPA still uses hash routing; this non-hash URL exists for link previews.

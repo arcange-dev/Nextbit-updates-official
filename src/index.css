@@ -163,3 +163,9 @@ header nav button:hover::after,header nav button:focus-visible::after{right:0}
 
 /* First-load welcome screen */
 @keyframes loadbar{from{transform:scaleX(.08)}to{transform:scaleX(1)}}
+
+/* Hover-to-define jargon micro-tooltips (Jargonizer component) */
+.jargon{border-bottom:1px dotted #ff6600;cursor:help;position:relative;text-decoration:none}
+.jargon:hover{color:#ff8a1f}
+.jargon:hover::after{content:attr(data-def);position:absolute;left:0;top:1.5rem;z-index:60;background:#0a0a0a;border:1px solid #333;color:#e6e6e6;padding:.5rem .7rem;width:250px;max-width:80vw;font-size:12px;line-height:1.6;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:ui-sans-serif,system-ui}
+@media(max-width:640px){.jargon:hover::after{left:-30px}}
