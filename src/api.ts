@@ -30,6 +30,7 @@ createArticle:(token:string,payload:unknown)=>request("/admin/articles",{method:
 updateArticle:(token:string,id:string,payload:unknown)=>request(`/admin/articles/${encodeURIComponent(id)}`,{method:"PUT",headers:authHeaders(token),body:JSON.stringify(payload)}),
 deleteArticle:(token:string,id:string)=>request(`/admin/articles/${encodeURIComponent(id)}`,{method:"DELETE",headers:authHeaders(token)}),
 // ---- Feature layer: llm-stats mirror, votes, status, trends ----
+tools:()=>request("/tools"),
 llmNews:()=>request("/llmstats/news"),
 llmModels:()=>request("/llmstats/models"),
 events:()=>request("/events"),
