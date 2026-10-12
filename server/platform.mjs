@@ -35,10 +35,10 @@ const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
 let migrated = false;
 const migrate = async () => {
   if (migrated || !hasDatabase()) return;
-  try {
-    try { await q("CREATE EXTENSION IF NOT EXISTS pgcrypto"); } catch {}
-    await q(`CREATE TABLE IF NOT EXISTS jobs(
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  // each step is isolated: one failing step never blocks the others
+  const steps = [
+    `CREATE TABLE IF NOT EXISTS jobs(
+      id TEXT PRIMARY KEY,
       title VARCHAR(120) NOT NULL,
       company VARCHAR(80) NOT NULL,
       location VARCHAR(80) DEFAULT 'Remote',
@@ -51,10 +51,14 @@ const migrate = async () => {
       apply_url TEXT NOT NULL,
       description TEXT DEFAULT '',
       status VARCHAR(10) DEFAULT 'live',
-      created_at TIMESTAMPTZ DEFAULT now())`);
-    await q("ALTER TABLE users ADD COLUMN IF NOT EXISTS xp INT DEFAULT 0");
-    await q("ALTER TABLE newsletter_subscribers ADD COLUMN IF NOT EXISTS prefs jsonb DEFAULT '[]'");
-  } catch (e) { console.error("[platform][migrate]", e.message); }
+      created_at TIMESTAMPTZ DEFAULT now())`,
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS xp INT DEFAULT 0",
+    "ALTER TABLE newsletter_subscribers ADD COLUMN IF NOT EXISTS prefs jsonb DEFAULT '[]'",
+  ];
+  for (const step of steps) {
+    try { await q(step); }
+    catch (e) { console.error("[platform][migrate]", e.message); }
+  }
   migrated = true;
 };
 
