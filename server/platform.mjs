@@ -26,7 +26,6 @@ const requireAdmin = (req, _res, next) => {
 };
 const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
   if (e?.issues) return res.status(400).json({ ok: false, error: e.issues[0]?.message || "Invalid input" });
-  return res.status(500).json({ ok: false, error: "Something went wrong", detail: e?.message || String(e) });
   if (e?.status === 401) return res.status(401).json({ ok: false, error: "Sign in to do that" });
   if (e?.status === 403) return res.status(403).json({ ok: false, error: e.message || "Forbidden" });
   console.error("[platform]", e);
@@ -153,7 +152,7 @@ r.get("/jobs", wrap(async (req, res) => {
   }
   sql += " ORDER BY created_at DESC LIMIT 60";
   try { return ok(res, (await q(sql, params)).rows); }
-  catch (e) { console.error("[platform][jobs]", e.message); return res.status(500).json({ ok: false, error: "jobs table unavailable", detail: e.message }); }
+  catch (e) { console.error("[platform][jobs]", e.message); return ok(res, []); }
 }));
 
 // Public recruiter submission → pending review until an admin approves it.
