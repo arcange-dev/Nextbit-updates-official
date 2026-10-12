@@ -9,6 +9,37 @@ type Model = {
   inputPrice: number | null; outputPrice: number | null; throughput: number | null; latencyMs: number | null;
 };
 
+// ---- AI company logos ----
+// Each provider is matched to its real logo (Google favicon service, by domain);
+// unknown providers fall back to a designed monogram badge.
+const ORG_DOMAINS: [RegExp, string][] = [
+  [/deepmind/, "deepmind.google"], [/google/, "gemini.google.com"], [/openai/, "openai.com"], [/anthropic/, "anthropic.com"],
+  [/meta/, "meta.com"], [/\bx\.ai|xai/, "x.ai"], [/mistral/, "mistral.ai"], [/cohere/, "cohere.com"],
+  [/microsoft/, "microsoft.com"], [/nvidia/, "nvidia.com"], [/qwen/, "qwen.ai"], [/alibaba/, "alibaba.com"],
+  [/deepseek/, "deepseek.com"], [/amazon/, "amazon.com"], [/(ai2|allen)/, "allenai.org"], [/(ai21)/, "ai21.com"],
+  [/perplexity/, "perplexity.ai"], [/databricks/, "databricks.com"], [/reka/, "reka.ai"], [/upstage/, "upstage.ai"],
+  [/snowflake/, "snowflake.com"], [/moonshot/, "moonshot.ai"], [/zhipu|z\.ai|glms/, "z.ai"], [/nous/, "nousresearch.com"],
+  [/groq/, "groq.com"], [/together/, "together.ai"], [/cerebras/, "cerebras.ai"], [/zeroeval/, "zeroeval.com"],
+  [/openrouter/, "openrouter.ai"], [/apple/, "apple.com"], [/samsung/, "samsung.com"], [/nomic/, "nomic.ai"],
+  [/sambanova/, "sambanova.ai"], [/stability/, "stability.ai"], [/huawei/, "huawei.com"], [/baidu|ernie/, "baidu.com"],
+  [/tencent|hunyuan/, "tencent.com"], [/\b01\.ai|01ai/, "01.ai"], [/solaris/, "solaris.ai"],
+];
+const monogram = (org: string) =>
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='#0a0a0a' stroke='#333' stroke-width='1'/><text x='16' y='21.5' font-family='monospace' font-size='12' fill='#e6e6e6' text-anchor='middle'>${org.trim().slice(0, 2).toUpperCase()}</text></svg>`,
+  );
+export function OrgLogo({ org, size = 18, className = "" }: { org: string; size?: number; className?: string }) {
+  const key = org.toLowerCase();
+  const domain = ORG_DOMAINS.find(([re]) => re.test(key))?.[1];
+  const src = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : monogram(org);
+  return (
+    <img src={src} width={size} height={size} alt="" aria-hidden loading="lazy"
+      className={"inline-block shrink-0 rounded-[4px] align-middle " + className}
+      onError={(e) => { if (!e.currentTarget.src.startsWith("data:")) e.currentTarget.src = monogram(org); }} />
+  );
+}
+
 const fmtPrice = (p: number | null) => (p == null ? "—" : p >= 1 ? `$${p}` : `$${p}`);
 const fmtCtx = (c: number | null) => (c == null ? "—" : c >= 1000000 ? `${(c / 1000000).toFixed(0)}M` : `${Math.round(c / 1000)}K`);
 const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—");
@@ -59,7 +90,7 @@ export default function LLMStatsHub() {
                 <a href={n.url} target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-1 py-4">
                   <span className="font-display text-[15px] font-semibold leading-snug transition group-hover:text-orange-2">{n.headline}</span>
                   <span className="flex items-center justify-between text-[11px] text-mute">
-                    <span>{n.source}</span>
+                    <span className="flex items-center gap-1.5"><OrgLogo org={n.source} size={13} />{n.source}</span>
                     <span className="flex items-center gap-1">{fmtDate(n.publishedAt)} <ArrowUpRight size={12} className="text-orange" aria-hidden /></span>
                   </span>
                 </a>
@@ -84,8 +115,8 @@ export default function LLMStatsHub() {
         <div className="mt-4 flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Organizations">
           {orgs.slice(0, 14).map((o) => (
             <button key={o} role="tab" aria-selected={org === o} onClick={() => setOrg(o)}
-              className={`shrink-0 border px-4 py-2 text-sm transition ${org === o ? "border-orange bg-orange font-semibold text-black" : "border-line text-mute hover:text-white"}`}>
-              {o}
+              className={`flex shrink-0 items-center gap-2 border px-4 py-2 text-sm transition ${org === o ? "border-orange bg-orange font-semibold text-black" : "border-line text-mute hover:text-white"}`}>
+              <OrgLogo org={o} size={14} /> {o}
             </button>
           ))}
         </div>
@@ -110,8 +141,8 @@ export default function LLMStatsHub() {
                 {visible.map((m) => (
                   <tr key={m.id} className="border-b border-line/60 transition hover:bg-white/[0.03]">
                     <td className="px-4 py-3">
-                      <span className="font-display font-semibold">{m.name}</span>
-                      <span className="block text-[11px] text-mute">{m.org}</span>
+                      <span className="flex items-center gap-2"><OrgLogo org={m.org} size={20} /><span className="font-display font-semibold">{m.name}</span></span>
+                      <span className="mt-0.5 block pl-7 text-[11px] text-mute">{m.org}</span>
                     </td>
                     <td className="px-4 py-3 text-mute">{fmtDate(m.releasedAt)}</td>
                     <td className="px-4 py-3 text-mute">{fmtCtx(m.contextWindow)}</td>

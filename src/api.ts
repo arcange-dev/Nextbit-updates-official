@@ -31,6 +31,8 @@ updateArticle:(token:string,id:string,payload:unknown)=>request(`/admin/articles
 deleteArticle:(token:string,id:string)=>request(`/admin/articles/${encodeURIComponent(id)}`,{method:"DELETE",headers:authHeaders(token)}),
 // ---- Feature layer: llm-stats mirror, votes, status, trends ----
 tools:()=>request("/tools"),
+llmNews:()=>request("/llmstats/news"),
+llmModels:()=>request("/llmstats/models"),
 trendsField:(field:string)=>request(`/trends/field/${encodeURIComponent(field)}`),
 // ---- Community layer: comments, taxonomy, paginated articles ----
 categories:()=>request("/categories"),
