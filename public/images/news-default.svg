@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="NEXTBIT / TECHNOLOGY">
+ <defs>
+  <linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#15151a"/><stop offset=".55" stop-color="#08080b"/><stop offset="1" stop-color="#111016"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#ff6a00" stop-opacity=".3"/><stop offset="1" stop-color="#ff6a00" stop-opacity="0"/></radialGradient>
+  <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#fff" stroke-opacity=".06" stroke-width="1"/></pattern>
+ </defs>
+ <rect width="640" height="360" fill="url(#base)"/>
+ <rect width="640" height="360" fill="url(#glow)"/>
+ <circle cx="500" cy="60" r="180" fill="#22d3ee" opacity=".06"/>
+ <rect width="640" height="360" fill="url(#grid)"/>
+ <path d="M0 310H640" stroke="#ff6a00" stroke-opacity=".3"/>
+ <g fill="none" stroke="#ff9952" stroke-width="2"><rect x="238" y="103" width="164" height="164" rx="26" transform="rotate(10 320 185)" stroke-opacity=".45"/><rect x="255" y="120" width="130" height="130" rx="20" transform="rotate(-8 320 185)" stroke-opacity=".7"/><path d="M282 215v-62h16l28 34v-34h16v62h-16l-28-34v34z" fill="#ff6a00" fill-opacity=".25" stroke="#ff9952" stroke-width="2"/><circle cx="409" cy="112" r="5" fill="#ff9952"/></g>
+ <text x="30" y="318" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="3" fill="#ff6a00">NEXTBIT / TECHNOLOGY</text>
+ <text x="30" y="339" font-family="Arial,sans-serif" font-size="9" letter-spacing="2" fill="#a1a1aa">NEXTBIT UPDATES / TECHNOLOGY INTELLIGENCE</text>
+</svg>
