@@ -35,6 +35,7 @@ let migrated = false;
 const migrate = async () => {
   if (migrated || !hasDatabase()) return;
   try {
+    try { await q("CREATE EXTENSION IF NOT EXISTS pgcrypto"); } catch {}
     await q(`CREATE TABLE IF NOT EXISTS jobs(
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       title VARCHAR(120) NOT NULL,
@@ -145,7 +146,8 @@ r.get("/jobs", wrap(async (req, res) => {
     sql += ` AND (LOWER(title) LIKE $${params.length} OR LOWER(company) LIKE $${params.length} OR LOWER(stack::text) LIKE $${params.length} OR LOWER(description) LIKE $${params.length})`;
   }
   sql += " ORDER BY created_at DESC LIMIT 60";
-  return ok(res, (await q(sql, params)).rows);
+  try { return ok(res, (await q(sql, params)).rows); }
+  catch (e) { console.error("[platform][jobs]", e.message); return ok(res, []); }
 }));
 
 // Public recruiter submission → pending review until an admin approves it.
