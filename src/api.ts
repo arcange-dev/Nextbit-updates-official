@@ -45,6 +45,7 @@ adminDeleteJob:(token:string,id:string)=>request(`/admin/jobs/${id}`,{method:"DE
 quizComplete:(token:string,body:unknown)=>request("/quiz/complete",{method:"POST",headers:{authorization:`Bearer ${token}`},body:JSON.stringify(body)}),
 myStats:(token:string)=>request("/my/stats",{headers:{authorization:`Bearer ${token}`}}),
 subscribePrefs:(body:unknown)=>request("/newsletter/prefs",{method:"POST",body:JSON.stringify(body)}),
+adminBackfillImages:(token:string)=>request("/admin/backfill-images",{method:"POST",headers:{authorization:`Bearer ${token}`}}),
 
 trendsField:(field:string)=>request(`/trends/field/${encodeURIComponent(field)}`),
 // ---- Community layer: comments, taxonomy, paginated articles ----

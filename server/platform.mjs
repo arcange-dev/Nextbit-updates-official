@@ -229,4 +229,29 @@ r.post("/newsletter/prefs", wrap(async (req, res) => {
   return ok(res, { saved: true });
 }));
 
+/* ---------- News images: fetch the original source's og:image ---------- */
+const ogImage = async (url) => {
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), 9000);
+  try {
+    const resp = await fetch(String(url), { signal: c.signal, headers: { "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36", accept: "text/html" }, redirect: "follow" });
+    if (!resp.ok) return null;
+    const html = (await resp.text()).slice(0, 400000);
+    const m = html.match(/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/i) || html.match(/<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']/i) || html.match(/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']/i) || html.match(/<img[^>]+src=["\']([^"\']+)["\']/i);
+    if (!m) return null;
+    try { return new URL(m[1], String(url)).href; } catch { return m[1]; }
+  } catch { return null; }
+  finally { clearTimeout(t); }
+};
+r.post("/admin/backfill-images", auth, requireAdmin, wrap(async (_req, res) => {
+  if (!needDb(res)) return;
+  const rows = (await q("SELECT id, source_url FROM articles WHERE (image_url IS NULL OR image_url='') AND source_url IS NOT NULL AND source_url <> '' LIMIT 30")).rows;
+  let updated = 0;
+  for (const a of rows) {
+    const img = await ogImage(a.source_url);
+    if (img) { try { await q("UPDATE articles SET image_url=$1 WHERE id=$2", [img, a.id]); updated++; } catch {} }
+  }
+  return ok(res, { checked: rows.length, updated });
+}));
+
 export default r;
