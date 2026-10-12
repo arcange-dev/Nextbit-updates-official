@@ -31,8 +31,7 @@ updateArticle:(token:string,id:string,payload:unknown)=>request(`/admin/articles
 deleteArticle:(token:string,id:string)=>request(`/admin/articles/${encodeURIComponent(id)}`,{method:"DELETE",headers:authHeaders(token)}),
 // ---- Feature layer: llm-stats mirror, votes, status, trends ----
 tools:()=>request("/tools"),
-llmNews:()=>request("/llmstats/news"),
-llmModels:()=>request("/llmstats/models"),
+trendsField:(field:string)=>request(`/trends/field/${encodeURIComponent(field)}`),
 events:()=>request("/events"),
 castVote:(target:string,kind:"story"|"tool",value:1|-1,voter:string)=>request("/vote",{method:"POST",body:JSON.stringify({target,kind,value,voter})}),
 votes:(kind:"story"|"tool",targets:string[],voter:string)=>request(`/votes?kind=${kind}&targets=${encodeURIComponent(targets.join(","))}&voter=${encodeURIComponent(voter)}`),
