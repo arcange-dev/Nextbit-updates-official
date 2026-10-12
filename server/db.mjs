@@ -29,7 +29,7 @@ if(process.env.ADMIN_EMAIL){
   }
 }if(ac.rows[0].c===0)for(const a of ARTICLES)await q("INSERT INTO articles(id,slug,category,title,summary,image_url,body,author,status,verified,published_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW()) ON CONFLICT DO NOTHING",[a.id,a.slug,a.category,a.title,a.summary,a.image_url,"Technology intelligence article body.","NextBit Desk","published",a.verified]);
 const rc=await q("SELECT COUNT(*)::int AS c FROM roadmaps");if(rc.rows[0].c===0)for(const r of ROADMAPS)await q("INSERT INTO roadmaps(id,title,group_name,description,stages) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",[r.id,r.title,r.group,r.description,JSON.stringify(r.stages)]);
-const pc=await q("SELECT COUNT(*)::int AS c FROM projects");if(pc.rows[0].c===0)for(const p of PROJECTS)await q("INSERT INTO projects(id,title,tech,level,duration,parts,image_url) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING",[p.id,p.title,p.tech,p.level,p.duration,p.parts,p.image_url]);await initFeatureTables();return true}
+const pc=await q("SELECT COUNT(*)::int AS c FROM projects");if(pc.rows[0].c===0)for(const p of PROJECTS)await q("INSERT INTO projects(id,title,tech,level,duration,parts,image_url) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING",[p.id,p.title,p.tech,p.level,p.duration,p.parts,p.image_url]);await initFeatureTables();await initCommunityTables();return true}
 // ---- Feature tables (AI directory, votes, tech events) ----
 // Idempotent migration, runs on every boot like the tables above.
 export async function initFeatureTables(){
@@ -59,5 +59,36 @@ export async function initFeatureTables(){
     ["websummit-2026","Web Summit","Conference","https://websummit.com","Lisbon, Portugal","2026-11-02T08:00:00Z"],
     ["ces-2027","CES 2027","Release","https://ces.tech","Las Vegas, USA","2027-01-06T08:00:00Z"]];
     for(const[id,title,kind,url,location,starts_at]of events)await q("INSERT INTO events(id,title,kind,url,location,starts_at) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING",[id,title,kind,url,location,starts_at]);
+  }
+}
+
+// ---- Community tables (categories, tags, comments) ----
+// Idempotent migration for the MVP social layer: taxonomies for article
+// filtering plus a threaded (one-level-reply) comment engine.
+export async function initCommunityTables(){
+  if(!pool) return;
+  // Best-effort trigram search index. Managed Postgres (Render/Neon) may
+  // restrict CREATE EXTENSION, so degrade silently to ILIKE search.
+  try{
+    await q("CREATE EXTENSION IF NOT EXISTS pg_trgm");
+    await q("CREATE INDEX IF NOT EXISTS articles_title_trgm ON articles USING gin (title gin_trgm_ops)");
+    await q("CREATE INDEX IF NOT EXISTS articles_summary_trgm ON articles USING gin (summary gin_trgm_ops)");
+  }catch(e){ console.warn("[NextBit] pg_trgm search indexes unavailable, using ILIKE fallback:", e.message); }
+  await q(`CREATE TABLE IF NOT EXISTS categories(id TEXT PRIMARY KEY,name TEXT NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE TABLE IF NOT EXISTS tags(id TEXT PRIMARY KEY,name TEXT NOT NULL UNIQUE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE TABLE IF NOT EXISTS article_tags(article_id TEXT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,tag_id TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,PRIMARY KEY(article_id,tag_id));
+  CREATE TABLE IF NOT EXISTS comments(id BIGSERIAL PRIMARY KEY,article_id TEXT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,author_name TEXT NOT NULL,parent_id BIGINT REFERENCES comments(id) ON DELETE CASCADE,body TEXT NOT NULL CHECK(char_length(body) BETWEEN 2 AND 2000),hidden BOOLEAN NOT NULL DEFAULT FALSE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE INDEX IF NOT EXISTS comments_article_idx ON comments(article_id,created_at);
+  CREATE INDEX IF NOT EXISTS comments_parent_idx ON comments(parent_id);
+  CREATE INDEX IF NOT EXISTS articles_published_idx ON articles(status,published_at DESC);`);
+  // Backfill the taxonomy from existing article categories so the filter UI
+  // has data on first boot.
+  const cats = await q("SELECT DISTINCT category FROM articles");
+  for(const {category} of cats.rows){
+    const id = String(category).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+    if(!id) continue;
+    await q("INSERT INTO categories(id,name) VALUES($1,$2) ON CONFLICT DO NOTHING",[id,category]);
+    await q("INSERT INTO tags(id,name) VALUES($1,$2) ON CONFLICT DO NOTHING",[id,category]);
+    await q(`INSERT INTO article_tags(article_id,tag_id) SELECT id,$1 FROM articles WHERE category=$2 ON CONFLICT DO NOTHING`,[id,category]);
   }
 }

@@ -32,6 +32,16 @@ deleteArticle:(token:string,id:string)=>request(`/admin/articles/${encodeURIComp
 // ---- Feature layer: llm-stats mirror, votes, status, trends ----
 tools:()=>request("/tools"),
 trendsField:(field:string)=>request(`/trends/field/${encodeURIComponent(field)}`),
+// ---- Community layer: comments, taxonomy, paginated articles ----
+categories:()=>request("/categories"),
+tags:()=>request("/tags"),
+articlesPage:(params:Record<string,string|number>)=>request(`/articles?${new URLSearchParams(params as any).toString()}`),
+comments:(articleId:string)=>request(`/articles/${encodeURIComponent(articleId)}/comments`),
+postComment:(articleId:string,body:string,parentId?:number,token?:string|null)=>request(`/articles/${encodeURIComponent(articleId)}/comments`,{method:"POST",headers:authHeaders(token||""),body:JSON.stringify({body,parentId})}),
+deleteComment:(id:number,token?:string|null)=>request(`/comments/${id}`,{method:"DELETE",headers:authHeaders(token||"")}),
+adminComments:(token:string)=>request("/admin/comments",{headers:authHeaders(token)}),
+adminSetCommentHidden:(token:string,id:number,hidden:boolean)=>request(`/admin/comments/${id}`,{method:"PATCH",headers:authHeaders(token),body:JSON.stringify({hidden})}),
+adminDeleteComment:(token:string,id:number)=>request(`/admin/comments/${id}`,{method:"DELETE",headers:authHeaders(token)}),
 events:()=>request("/events"),
 castVote:(target:string,kind:"story"|"tool",value:1|-1,voter:string)=>request("/vote",{method:"POST",body:JSON.stringify({target,kind,value,voter})}),
 votes:(kind:"story"|"tool",targets:string[],voter:string)=>request(`/votes?kind=${kind}&targets=${encodeURIComponent(targets.join(","))}&voter=${encodeURIComponent(voter)}`),

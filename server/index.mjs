@@ -1,4 +1,5 @@
-import express from "express";import cors from "cors";import helmet from "helmet";import morgan from "morgan";import rateLimit from "express-rate-limit";import dotenv from "dotenv";import bcrypt from "bcryptjs";import jwt from "jsonwebtoken";import path from "node:path";import{randomUUID}from"node:crypto";import{fileURLToPath}from"node:url";import{z}from"zod";import{initDb,hasDatabase,q,verifyDatabaseConnection,databaseInfo}from"./db.mjs";import{getTrending,syncTrendingToDb}from"./news.mjs";dotenv.config();
+import express from "express";import cors from "cors";import helmet from "helmet";import morgan from "morgan";import rateLimit from "express-rate-limit";import dotenv from "dotenv";import bcrypt from "bcryptjs";import jwt from "jsonwebtoken";import path from "node:path";
+import fs from "node:fs";import{randomUUID}from"node:crypto";import{fileURLToPath}from"node:url";import{z}from"zod";import{initDb,hasDatabase,q,verifyDatabaseConnection,databaseInfo}from"./db.mjs";import{getTrending,syncTrendingToDb}from"./news.mjs";dotenv.config();
 const app=express();const PORT=Number(process.env.PORT||10000);const JWT_SECRET=process.env.JWT_SECRET||"dev-only-change-me";const __dirname=path.dirname(fileURLToPath(import.meta.url));const root=path.resolve(__dirname,"..");const dist=path.join(root,"dist");
 app.set("trust proxy",1);app.use(helmet({contentSecurityPolicy:false,crossOriginEmbedderPolicy:false}));if(process.env.CORS_ORIGIN)app.use(cors({origin:process.env.CORS_ORIGIN.split(",").map(x=>x.trim()),credentials:true}));app.use(express.json({limit:"1mb"}));app.use(morgan("combined"));app.use("/api",rateLimit({windowMs:15*60*1000,limit:180,standardHeaders:"draft-7",legacyHeaders:false}));
 const auth=async(req,res,next)=>{try{const h=req.headers.authorization;if(!h?.startsWith("Bearer "))return res.status(401).json({error:"Authentication required"});const token=h.slice(7);req.user=jwt.verify(token,JWT_SECRET);next()}catch{return res.status(401).json({error:"Invalid or expired token"})}};
@@ -9,7 +10,28 @@ app.get("/api/health",async(_req,res)=>{let database={status:"disabled",info:dat
 app.get("/api/trending",async(req,res)=>{try{const topic=String(req.query.topic||"all");const limit=Math.min(100,Math.max(1,Number(req.query.limit)||60));const refresh=String(req.query.refresh||"") === "1";const data=await getTrending({topic,limit,refresh});if(hasDatabase()&&data.items?.length)await syncTrendingToDb(data.items);return respond(res,data)}catch(e){console.error("trending",e);return res.status(502).json({ok:false,error:"News feeds are temporarily unavailable"})}});
 
 app.get("/api/articles/:idOrSlug",async(req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"Database is not configured"});const key=req.params.idOrSlug;const r=await q("SELECT id,slug,category,title,summary,body,image_url,source_url,author,verified,published_at FROM articles WHERE status='published' AND (id=$1 OR slug=$1) LIMIT 1",[key]);if(!r.rowCount)return res.status(404).json({ok:false,error:"Article not found"});return respond(res,r.rows[0])});
-app.get("/api/articles",async(req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"Database is not configured"});const qv=String(req.query.q||"").trim();const cat=String(req.query.category||"").trim();const r=await q(`SELECT id,slug,category,title,summary,image_url,verified,published_at,source_url,author FROM articles WHERE status='published' AND ($1='' OR category=$1) AND ($2='' OR title ILIKE '%'||$2||'%' OR summary ILIKE '%'||$2||'%') ORDER BY published_at DESC NULLS LAST LIMIT 100`,[cat,qv]);return respond(res,r.rows)});
+// GET /api/articles -> filterable, paginated article feed.
+// Query: q (search), category, tag, sort (new|old|az), page, limit.
+// Without `page` it returns a plain array for backwards compatibility.
+app.get("/api/articles",async(req,res)=>{
+  if(!hasDatabase())return res.status(503).json({ok:false,error:"Database is not configured"});
+  const qv=String(req.query.q||"").trim().slice(0,120);
+  const cat=String(req.query.category||"").trim().slice(0,80);
+  const tag=String(req.query.tag||"").trim().slice(0,80);
+  const sort=req.query.sort==="old"?"ASC":req.query.sort==="az"?"az":"DESC";
+  const page=Math.max(1,Number(req.query.page)||0);
+  const limit=Math.min(50,Math.max(1,Number(req.query.limit)||12));
+  const where=`status='published' AND ($1='' OR category=$1) AND ($2='' OR title ILIKE '%'||$2||'%' OR summary ILIKE '%'||$2||'%')`;
+  const params=[cat,qv];
+  let join="";
+  if(tag){params.push(tag);join=`JOIN article_tags at_ ON at_.article_id=articles.id AND at_.tag_id=$${params.length}`}
+  const order=sort==="az"?"title ASC":"published_at "+(sort==="ASC"?"ASC":"DESC")+" NULLS LAST";
+  const select=`SELECT id,slug,category,title,summary,image_url,verified,published_at,source_url,author FROM articles ${join} WHERE ${where}`;
+  if(!page){const r=await q(select+` ORDER BY ${order} LIMIT 100`,params);return respond(res,r.rows)}
+  const total=(await q(`SELECT COUNT(*)::int AS c FROM articles ${join} WHERE ${where}`,params)).rows[0].c;
+  const r=await q(select+` ORDER BY ${order} LIMIT ${limit} OFFSET ${(page-1)*limit}`,params);
+  return respond(res,{items:r.rows,total,page,pages:Math.max(1,Math.ceil(total/limit))});
+});
 app.get("/api/roadmaps",async(req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"Database is not configured"});const g=String(req.query.group||"");const r=await q("SELECT id,title,group_name AS group,description,stages FROM roadmaps WHERE ($1='' OR group_name=$1) ORDER BY group_name,title",[g]);return respond(res,r.rows)});
 app.get("/api/roadmaps/:id",async(req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"Database is not configured"});const r=await q("SELECT id,title,group_name AS group,description,stages FROM roadmaps WHERE id=$1",[req.params.id]);if(!r.rowCount)return res.status(404).json({ok:false,error:"Roadmap not found"});return respond(res,r.rows[0])});
 app.get("/api/projects",async(_req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"Database is not configured"});const r=await q("SELECT id,title,tech,level,duration,parts,image_url FROM projects ORDER BY created_at DESC");return respond(res,r.rows)});
@@ -41,5 +63,22 @@ app.post("/api/analytics/events",auth,async(req,res)=>{if(!hasDatabase())return 
 /* ---- NextBit feature layer: AI proxy + dev-tools API ---- */
 app.use("/api",(await import("./features.mjs")).default);
 app.use("/api",(await import("./github.mjs")).default);
+app.use("/api",(await import("./community.mjs")).default);
+app.use("/api",(await import("./oauth.mjs")).default);
+// Shareable article URLs with dynamic OpenGraph/Twitter meta.
+// The SPA still uses hash routing; this non-hash URL exists for link previews.
+const esc=(x)=>String(x||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+app.get("/article/:idOrSlug",async(req,res,next)=>{
+  try{
+    if(!hasDatabase())return next();
+    const r=await q("SELECT title,summary,image_url,slug,category,author FROM articles WHERE status='published' AND (id=$1 OR slug=$1) LIMIT 1",[req.params.idOrSlug]);
+    if(!r.rowCount)return next();
+    const a=r.rows[0];const base=`${req.protocol}://${req.get("host")}`;const url=`${base}/article/${a.slug||req.params.idOrSlug}`;
+    let html=await fs.promises.readFile(path.join(dist,"index.html"),"utf8");
+    const og=`<!--og:start-->\n<title>${esc(a.title)}</title>\n<meta property="og:title" content="${esc(a.title)}"/>\n<meta property="og:description" content="${esc(a.summary)}"/>\n<meta property="og:type" content="article"/>\n<meta property="og:url" content="${esc(url)}"/>\n<meta property="og:image" content="${esc(a.image_url||"")}"/>\n<meta name="twitter:card" content="summary_large_image"/>\n<meta name="twitter:title" content="${esc(a.title)}"/>\n<meta name="twitter:description" content="${esc(a.summary)}"/>\n<link rel="canonical" href="${esc(url)}"/>\n<!--og:end-->`;
+    html=html.replace(/<!--og:start-->[\s\S]*?<!--og:end-->/,"").replace(/<title>[\s\S]*?<\/title>/,og);
+    return res.type("html").send(html);
+  }catch(e){console.error("[og]",e);next()}
+});
 app.use(express.static(dist,{maxAge:"1h",etag:true}));app.use((req,res,next)=>{if(req.path.startsWith("/api/"))return next();res.sendFile(path.join(dist,"index.html"))});app.use("/api",(req,res)=>res.status(404).json({ok:false,error:"API route not found"}));app.use((err,_req,res,_next)=>{console.error(err);res.status(500).json({ok:false,error:"Internal server error"})});
 let dbReady=await initDb();setInterval(async()=>{if(!dbReady){try{dbReady=await initDb()}catch(error){console.error("[NextBit] database retry failed",error)}}},60000);app.listen(PORT,"0.0.0.0",()=>console.log(`[NextBit] listening on 0.0.0.0:${PORT}; database=${dbReady?"ready":"not-ready"}`));
