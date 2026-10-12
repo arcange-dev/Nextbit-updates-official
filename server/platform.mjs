@@ -25,6 +25,7 @@ const requireAdmin = (req, _res, next) => {
   next(Object.assign(new Error("Admin access required"), { status: 403 }));
 };
 const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
+  if (e?.issues) return res.status(400).json({ ok: false, error: e.issues[0]?.message || "Invalid input" });
   if (e?.status === 401) return res.status(401).json({ ok: false, error: "Sign in to do that" });
   if (e?.status === 403) return res.status(403).json({ ok: false, error: e.message || "Forbidden" });
   console.error("[platform]", e);
