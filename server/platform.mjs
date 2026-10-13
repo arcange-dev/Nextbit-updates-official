@@ -254,4 +254,36 @@ r.post("/admin/backfill-images", auth, requireAdmin, wrap(async (_req, res) => {
   return ok(res, { checked: rows.length, updated });
 }));
 
+/* ---------- smart diagnostics: one admin call, every service health-checked ---------- */
+r.get("/admin/system", auth, requireAdmin, wrap(async (_req, res) => {
+  const t0 = Date.now();
+  const out = { at: new Date().toISOString(), services: {} };
+  // 1) database reachability (a live SELECT, not just configured?)
+  try {
+    const t = Date.now(); await q("SELECT 1");
+    out.services.database = { ok: true, ms: Date.now() - t };
+  } catch (e) { out.services.database = { ok: false, error: String(e.message || e).slice(0, 140) }; }
+  // 2) transactional email
+  out.services.mail = process.env.RESEND_API_KEY
+    ? { ok: true, detail: "Resend key configured" }
+    : { ok: false, detail: "RESEND_API_KEY not set on Render" };
+  // 3) external intelligence feeds the site depends on
+  const ping = async (url) => {
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 6000);
+    try {
+      const t0 = Date.now();
+      const r2 = await fetch(url, { signal: ctrl.signal, headers: { "user-agent": "NextBit-Updates" } });
+      return { ok: r2.ok, ms: Date.now() - t0 };
+    } catch { return { ok: false, detail: "unreachable" }; }
+    finally { clearTimeout(t); }
+  };
+  out.services.llmstats = await ping("https://api.zeroeval.com/leaderboard/models/list");
+  out.services.github = await ping("https://api.github.com/rate_limit");
+  out.services.market = await ping("https://query1.finance.yahoo.com/v8/finance/chart/NVDA?interval=1d&range=1d");
+  out.uptime = process.uptime();
+  out.memory = Math.round(process.memoryUsage().rss / 1048576) + " MB";
+  out.totalMs = Date.now() - t0;
+  return ok(res, out);
+}));
+
 export default r;

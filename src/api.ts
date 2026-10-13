@@ -3,6 +3,7 @@ async function request(path:string,init:RequestInit={}){const r=await fetch(`${A
 const authHeaders=(token:string)=>({Authorization:`Bearer ${token}`});
 export const api={
 health:()=>request("/health"),
+adminSystem:(token:string)=>request("/admin/system",{headers:{authorization:`Bearer ${token}`}}),
 articles:(q="")=>request(`/articles${q?`?q=${encodeURIComponent(q)}`:""}`),
 article:(id:string)=>request(`/articles/${encodeURIComponent(id)}`),
 roadmaps:()=>request("/roadmaps"),
