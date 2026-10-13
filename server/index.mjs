@@ -104,6 +104,7 @@ app.use("/api",(await import("./github.mjs")).default);
 app.use("/api",(await import("./community.mjs")).default);
 app.use("/api",(await import("./platform.mjs")).default);
 app.use("/api",(await import("./mailer.mjs")).default);
+app.use("/api",(await import("./settings.mjs")).default);
 // OAuth (Google/GitHub) sign-in removed: the site is admin-only.
 // Shareable article URLs with dynamic OpenGraph/Twitter meta.
 // The SPA still uses hash routing; this non-hash URL exists for link previews.

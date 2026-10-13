@@ -14,15 +14,15 @@ const FROM = process.env.MAIL_FROM || "NextBit Updates <onboarding@resend.dev>";
 const ok = (res, data, status = 200) => res.status(status).json({ ok: true, data });
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const auth = (req, _res, next) => {
+const auth = (req, res, next) => {
   try {
     const h = req.headers.authorization;
-    if (!h?.startsWith("Bearer ")) throw new Error("no token");
+    if (!h?.startsWith("Bearer ")) return res.status(401).json({ ok: false, error: "Sign in to do that" });
     req.user = jwt.verify(h.slice(7), JWT_SECRET);
     next();
-  } catch { next(Object.assign(new Error("Authentication required"), { status: 401 })); }
+  } catch { return res.status(401).json({ ok: false, error: "Invalid or expired session. Sign in again." }); }
 };
-const admin = (req, _res, next) => req.user?.role === "admin" ? next() : next(Object.assign(new Error("Admin access required"), { status: 403 }));
+const admin = (req, res, next) => req.user?.role === "admin" ? next() : res.status(403).json({ ok: false, error: "Admin access required" });
 const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
   if (e?.status === 401) return res.status(401).json({ ok: false, error: "Sign in to do that" });
   if (e?.status === 403) return res.status(403).json({ ok: false, error: e.message || "Forbidden" });

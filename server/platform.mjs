@@ -12,17 +12,17 @@ const r = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-only-change-me";
 const ok = (res, data, status = 200) => res.status(status).json({ ok: true, data });
 const needDb = (res) => hasDatabase() ? true : (res.status(503).json({ ok: false, error: "Database is not configured" }), false);
-const auth = (req, _res, next) => {
+const auth = (req, res, next) => {
   try {
     const h = req.headers.authorization;
-    if (!h?.startsWith("Bearer ")) throw new Error("no token");
+    if (!h?.startsWith("Bearer ")) return res.status(401).json({ ok: false, error: "Sign in to do that" });
     req.user = jwt.verify(h.slice(7), JWT_SECRET);
     next();
-  } catch { next(Object.assign(new Error("Authentication required"), { status: 401 })); }
+  } catch { return res.status(401).json({ ok: false, error: "Invalid or expired session. Sign in again." }); }
 };
 const requireAdmin = (req, _res, next) => {
   if (req.user && (req.user.role === "admin" || req.user.admin === true || req.user.isAdmin === true)) return next();
-  next(Object.assign(new Error("Admin access required"), { status: 403 }));
+  return res.status(403).json({ ok: false, error: "Admin access required" });
 };
 const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
   if (e?.issues) return res.status(400).json({ ok: false, error: e.issues[0]?.message || "Invalid input" });
