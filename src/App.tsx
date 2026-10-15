@@ -148,14 +148,17 @@ function LiveTrending({compact=false}:{compact?:boolean}){
   const[vcs,setVcs]=useState<Record<string,{count:number;mine:number}>>({});
   const[loading,setLoading]=useState(true);
   const[error,setError]=useState("");
-  const topics=["all","AI","Cybersecurity","Software","Hardware","Robotics","Africa Tech","Space Tech"];
+  const[tops,setTops]=useState<Record<string,number>>({});
+  const base=["all","AI","Cybersecurity","Software","Hardware","Robotics","Africa Tech","Space Tech"];
+  const extra=Object.keys(tops).filter(t=>!base.includes(t)&&t!=="Technology").sort((a,b)=>tops[b]-tops[a]).slice(0,3);
+  const topics=[...base,...extra];
 
   useEffect(()=>{
     let active=true;
     setLoading(true);
     setError("");
     api.trending(topic,compact?12:60,false)
-      .then(data=>{if(active){const its:any[]=data.items||[];setItems(its);api.votes("story",its.map(x=>String(x.id)).slice(0,60),localStorage.getItem("nb-voter")||"").then(v=>active&&setVcs(v as any)).catch(()=>{})}})
+      .then(data=>{if(active){const its:any[]=data.items||[];setItems(its);setTops((data as any).topics||{});api.votes("story",its.map(x=>String(x.id)).slice(0,60),localStorage.getItem("nb-voter")||"").then(v=>active&&setVcs(v as any)).catch(()=>{})}})
       .catch(err=>{if(active){setItems([]);setError(err instanceof Error?err.message:"Live feeds unavailable")}})
       .finally(()=>{if(active)setLoading(false)});
     return()=>{active=false};
@@ -167,7 +170,7 @@ function LiveTrending({compact=false}:{compact?:boolean}){
   }else if(error){
     body=<div className="glass-card p-7 text-sm text-zinc-400">{error}</div>;
   }else if(!items.length){
-    body=<div className="glass-card p-7 text-sm text-zinc-400">No live stories are available for this topic right now.</div>;
+    body=<div className="glass-card p-7 text-sm text-zinc-400">No live stories are available for this topic right now. <button onClick={()=>setTopic("all")} className="ml-1 text-orange underline underline-offset-4 hover:text-white">View all stories instead</button></div>;
   }else{
     body=<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{items.map(item=>{
       const openSource=()=>window.open(item.url,"_blank","noopener,noreferrer");
@@ -194,7 +197,7 @@ function LiveTrending({compact=false}:{compact?:boolean}){
         <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">Google News searches plus selected publisher and official technology RSS feeds, deduplicated and ranked by publication time.</p>
       </div>
     </div>
-    <div className="mb-6 flex flex-wrap gap-2">{topics.map(x=><button key={x} onClick={()=>setTopic(x)} className={topic===x?"liquid-button":"liquid-button ghost"}>{x==="all"?"All":x}</button>)}</div>
+    <div className="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="News topics">{topics.map(x=><button key={x} role="tab" aria-selected={topic===x} onClick={()=>setTopic(x)} className={topic===x?"liquid-button":"liquid-button ghost"}>{x==="all"?"All":x}{x!=="all"&&tops[x]?<span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] opacity-80">{tops[x]}</span>:null}</button>)}</div>
     {body}
   </section>;
 }
