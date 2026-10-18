@@ -30,7 +30,7 @@ const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
   if (e?.status === 401) return res.status(401).json({ ok: false, error: "Sign in to do that" });
   if (e?.status === 403) return res.status(403).json({ ok: false, error: e.message || "Forbidden" });
   console.error("[platform]", e);
-  res.status(500).json({ ok: false, error: "Something went wrong" });
+  res.status(503).json({ ok: false, error: ((e.code==="ENOTFOUND"||e.code==="ECONNREFUSED"||e.code==="ETIMEDOUT"||/pooler\.supabase\.com|supabase\.com/.test(String(e.message)))) ? "The database is offline. Restore Supabase, then try again." : "Something went wrong" });
 });
 
 let migrated = false;

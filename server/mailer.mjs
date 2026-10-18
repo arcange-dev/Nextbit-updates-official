@@ -28,7 +28,7 @@ const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
   if (e?.status === 403) return res.status(403).json({ ok: false, error: e.message || "Forbidden" });
   if (e?.issues) return res.status(400).json({ ok: false, error: e.issues[0]?.message || "Invalid input" });
   console.error("[mailer]", e);
-  res.status(500).json({ ok: false, error: "Something went wrong" });
+  res.status(503).json({ ok: false, error: ((e.code==="ENOTFOUND"||e.code==="ECONNREFUSED"||e.code==="ETIMEDOUT"||/pooler\.supabase\.com|supabase\.com/.test(String(e.message)))) ? "The database is offline. Restore Supabase, then try again." : "Something went wrong" });
 });
 
 export const mailConfigured = () => Boolean(process.env.RESEND_API_KEY);
