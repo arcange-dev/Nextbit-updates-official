@@ -11,7 +11,7 @@ const r = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-only-change-me";
 const ok = (res, data, status = 200) => res.status(status).json({ ok: true, data });
 
-const db = (res) => hasDatabase() ? true : (res.status(503).json({ ok: false, error: "Database is not configured" }), false);
+const db = (res) => hasDatabase() ? true : (res.status(503).json({ ok: false, error: "The database is offline. Restore Supabase, then try again." }), false);
 
 // Auth middleware (same JWT contract as the main API).
 const auth = (req, _res, next) => {

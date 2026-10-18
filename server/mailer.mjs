@@ -99,7 +99,7 @@ r.get("/newsletter/unsubscribe", wrap(async (req, res) => {
 
 /* Admin: digest of the latest published stories → all active subscribers. */
 r.post("/admin/newsletter/send", auth, admin, wrap(async (req, res) => {
-  if (!hasDatabase()) return res.status(503).json({ ok: false, error: "Database is not configured" });
+  if (!hasDatabase()) return res.status(503).json({ ok: false, error: "The database is offline. Restore Supabase, then try again." });
   if (!mailConfigured()) return res.status(412).json({ ok: false, error: "Email sending is not configured. Add RESEND_API_KEY in the Render environment." });
   await migrate();
   const body = z.object({ subject: z.string().trim().min(3).max(140).optional(), intro: z.string().trim().max(600).optional(), testTo: z.string().email().optional() }).parse(req.body || {});
