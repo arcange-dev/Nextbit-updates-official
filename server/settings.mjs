@@ -30,6 +30,13 @@ const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
 
 export const SETTINGS_DEFAULTS = {
   copyrightText: "© {year} NextBit Updates · Technology intelligence for the future.",
+  exploreHeading: "Explore",
+  companyHeading: "Company",
+  briefTitle: "The NextBit Brief",
+  briefTagline: "Important technology signals, once a week.",
+  topicsLink: "Choose your topics",
+  signupPlaceholder: "you@example.com",
+  signupCta: "Join",
   footerTagline: "Your gateway to the future of technology — verified news, global ICT roadmaps and real-world projects.",
   heroTagline: "Intelligence for the next generation of builders.",
   colorPrimary: "#ffffff",
@@ -65,6 +72,13 @@ const schema = z.object({
   colorPrimary: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   colorAccent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   colorHighlight: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  exploreHeading: z.string().trim().min(1).max(120).default("Explore"),
+  companyHeading: z.string().trim().min(1).max(120).default("Company"),
+  briefTitle: z.string().trim().min(1).max(160).default("The NextBit Brief"),
+  briefTagline: z.string().trim().min(1).max(200).default("Important technology signals, once a week."),
+  topicsLink: z.string().trim().min(1).max(120).default("Choose your topics"),
+  signupPlaceholder: z.string().trim().min(2).max(120).default("you@example.com"),
+  signupCta: z.string().trim().min(1).max(40).default("Join"),
 });
 
 /* Public: the whole site reads branding/colors from here. */
