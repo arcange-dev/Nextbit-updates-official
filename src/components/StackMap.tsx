@@ -6,7 +6,7 @@ const LAYERS = [
   { title: "Frontend", note: "Zero-bloat single-page app, hash routing, no heavy UI frameworks.", items: ["React 19", "TypeScript 5", "Vite 8", "Tailwind CSS v4", "Lucide icons", "CSS-variable theming"] },
   { title: "Backend", note: "One Node process serves the JSON API and the built frontend.", items: ["Express 5", "Node 20", "Zod validation", "JWT sessions", "Helmet + rate limiting"] },
   { title: "Data", note: "Relational core with trigram search; entity-style REST layer.", items: ["PostgreSQL", "pg_trgm search", "Categories & tags", "Comments & bookmarks", "Job board tables"] },
-  { title: "AI & signals", note: "Live intelligence fetched server-side and cached 10–30 minutes.", items: ["llm-stats mirror (408 models)", "GitHub trending radar", "GitHub releases radar", "Yahoo market quotes", "OpenGraph share cards"] },
+  { title: "AI & signals", note: "Live intelligence fetched server-side and cached 10–30 minutes.", items: ["AI model catalogue (408 models)", "GitHub trending radar", "GitHub releases radar", "Yahoo market quotes", "OpenGraph share cards"] },
 ];
 
 export default function StackMap() {

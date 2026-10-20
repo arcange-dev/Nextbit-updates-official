@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Chip3D from "./Chip3D";
 
 // First-load welcome screen: brand intro + feature overview, shown while the site boots.
-const FEATURES = ["Live verified news", "ICT roadmaps", "Hands-on projects", "Africa Tech", "AI news & models — llm-stats"];
+const FEATURES = ["Live verified news", "ICT roadmaps", "Hands-on projects", "Africa Tech", "AI news & models"];
 
 export default function WelcomeLoader({ done }: { done: boolean }) {
   const [gone, setGone] = useState(false);
