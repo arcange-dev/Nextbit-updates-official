@@ -44,7 +44,7 @@ const fmtPrice = (p: number | null) => (p == null ? "—" : p >= 1 ? `$${p}` : `
 const fmtCtx = (c: number | null) => (c == null ? "—" : c >= 1000000 ? `${(c / 1000000).toFixed(0)}M` : `${Math.round(c / 1000)}K`);
 const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—");
 
-// Live clone of llm-stats.com: AI news feed + full model catalogue with pricing and performance.
+// Live AI wire: news feed + full model catalogue with pricing and performance.
 // Data: GET /api/llmstats/news + /api/llmstats/models (10-minute server cache, graceful offline states).
 export default function LLMStatsHub() {
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -73,12 +73,11 @@ export default function LLMStatsHub() {
 
   return (
     <div className="mx-auto grid max-w-[1440px] gap-12 px-5 lg:px-10 xl:grid-cols-[380px_1fr]">
-      {/* ---- AI news, cloned live from llm-stats.com/ai-news ---- */}
-      <section aria-label="AI news from llm-stats" className="border border-line bg-card p-6">
+      {/* ---- AI news wire ---- */}
+      <section aria-label="AI news" className="border border-line bg-card p-6">
         <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-orange">
           <Newspaper size={15} aria-hidden /> AI news
         </div>
-        <p className="mt-2 text-xs text-mute">Cloned live from llm-stats.com</p>
         {newsErr ? (
           <p role="alert" className="mt-4 text-sm text-mute">{newsErr}</p>
         ) : !news.length ? (
@@ -101,7 +100,7 @@ export default function LLMStatsHub() {
       </section>
 
       {/* ---- Model catalogue: pricing, context, throughput ---- */}
-      <section aria-label="AI models and tools from llm-stats">
+      <section aria-label="AI models and tools">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <h2 className="font-display text-2xl font-bold">Models & tools <span className="text-mute">({filtered.length})</span></h2>
           <div className="relative sm:ml-auto sm:w-72">
@@ -162,7 +161,7 @@ export default function LLMStatsHub() {
           </div>
         )}
         <p className="mt-3 text-[11px] text-mute">
-          Data mirrored from llm-stats.com (ZeroEval leaderboard dataset). Cached 10 minutes server-side.
+          Cached 10 minutes server-side.
         </p>
       </section>
     </div>

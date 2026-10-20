@@ -6,7 +6,7 @@ type S = { id: string; label: string; status: string; description: string };
 const LOOK: Record<string, { dot: string; label: string; text: string }> = {
   none:        { dot: "bg-neon",       label: "Operational",  text: "text-neon" },
   minor:       { dot: "bg-amber-400",  label: "Minor outage", text: "text-amber-400" },
-  major:       { dot: "bg-orange-500", label: "Major outage", text: "text-orange-500" },
+  major:       { dot: "bg-zinc-400", label: "Major outage", text: "text-zinc-300" },
   critical:    { dot: "bg-red-500",    label: "Critical",    text: "text-red-400" },
   maintenance: { dot: "bg-cyber",      label: "Maintenance", text: "text-cyber" },
   unknown:     { dot: "bg-zinc-600",   label: "No data",    text: "text-zinc-600" },

@@ -32,9 +32,9 @@ export const SETTINGS_DEFAULTS = {
   copyrightText: "© {year} NextBit Updates · Technology intelligence for the future.",
   footerTagline: "Your gateway to the future of technology — verified news, global ICT roadmaps and real-world projects.",
   heroTagline: "Intelligence for the next generation of builders.",
-  colorPrimary: "#ff6a00",
-  colorAccent: "#a855f7",
-  colorHighlight: "#00ff9d",
+  colorPrimary: "#ffffff",
+  colorAccent: "#9a9a9a",
+  colorHighlight: "#f0f0f0",
 };
 
 let migrated = false;
