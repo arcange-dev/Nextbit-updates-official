@@ -102,7 +102,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
 ::-webkit-scrollbar-track{background:#08080a}
 ::-webkit-scrollbar-thumb{background:#353038;border:2px solid #08080a;border-radius:99px}
 ::-webkit-scrollbar-thumb:hover{background:#ffffff}
-.glass-card{position:relative;isolation:isolate;border-radius:1.2rem}
+.glass-card{position:relative;isolation:isolate;border-radius:1.4rem;transition:transform .45s cubic-bezier(.22,1,.36,1),box-shadow .45s cubic-bezier(.22,1,.36,1),border-color .45s}
 .glass-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;background:linear-gradient(145deg,rgba(255,255,255,.045),transparent 45%,rgba(255,255,255,.025));opacity:.9}
 .glass-card img{background:linear-gradient(135deg,#18181b,#0a0a0c)}
 .liquid-button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:.4rem}
@@ -239,3 +239,33 @@ html[data-theme="light"] .glass-card{border-color:rgba(10,10,15,.12)}
 html[data-theme="light"] .glass-card:hover{border-color:rgba(10,10,15,.35);box-shadow:0 30px 70px rgba(10,10,15,.12)}
 html[data-theme="light"] body{background:radial-gradient(circle at 8% 4%,rgba(255,255,255,.08),transparent 26rem),radial-gradient(circle at 92% 14%,rgba(255,154,82,.06),transparent 22rem),#f4f4f6;color:#0a0a0b}
 html[data-theme="light"] .grid-bg{background-image:linear-gradient(rgba(10,10,15,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(10,10,15,.04) 1px,transparent 1px)}
+/* ---------- light theme: liquid + clay polish ---------- */
+html[data-theme="light"] body{
+  background:
+    radial-gradient(circle at 12% 0%,rgba(10,10,15,.05),transparent 34rem),
+    radial-gradient(circle at 88% 8%,rgba(10,10,15,.035),transparent 30rem),
+    linear-gradient(180deg,#fbfbfc 0%,#f1f1f3 100%);
+  color:#0a0a0b}
+html[data-theme="light"] .glass-card{
+  background:linear-gradient(180deg,#ffffff,#fbfbfd);
+  border:1px solid rgba(10,10,15,.08);
+  border-radius:1.5rem;
+  box-shadow:0 1px 2px rgba(10,10,15,.04),0 14px 34px rgba(10,10,15,.07),inset 0 1px 0 #fff}
+html[data-theme="light"] .glass-card:hover{
+  transform:translateY(-5px);
+  border-color:rgba(10,10,15,.14);
+  box-shadow:0 2px 4px rgba(10,10,15,.05),0 24px 48px rgba(10,10,15,.11),inset 0 1px 0 #fff}
+html[data-theme="light"] .liquid-button{
+  background:linear-gradient(145deg,#232327 0%,#000 100%);
+  color:#fff;border:1px solid #000;
+  box-shadow:0 10px 24px rgba(10,10,15,.2)}
+html[data-theme="light"] .liquid-button:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(10,10,15,.26)}
+html[data-theme="light"] .liquid-button.ghost{
+  background:rgba(10,10,15,.045);color:#0a0a0b;border:1px solid rgba(10,10,15,.12);box-shadow:none}
+html[data-theme="light"] header{background:rgba(251,251,252,.86);border-bottom:1px solid rgba(10,10,15,.08)}
+html[data-theme="light"] .admin-shell{background:
+    radial-gradient(circle at 15% 10%,rgba(10,10,15,.05),transparent 32rem),
+    radial-gradient(circle at 85% 15%,rgba(10,10,15,.04),transparent 28rem)}
+html[data-theme="light"] .page-aura{background:linear-gradient(120deg,rgba(10,10,15,.06),transparent 55%)}
+/* clay clustering: soft tinted panels grouping card clusters */
+html[data-theme="light"] .space-y-5>.grid,html[data-theme="light"] .space-y-5>.glass-card{border-radius:1.5rem}
