@@ -1,12 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 64" role="img" aria-labelledby="title">
   <title id="title">NextBit Updates</title>
-  <defs><linearGradient id="accent" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d4d4d4"/><stop offset="1" stop-color="#c8c8c8"/></linearGradient></defs>
   <g transform="translate(0 2)">
-    <rect width="60" height="60" rx="15" fill="#090909" stroke="#e8e8e8" stroke-opacity=".55"/>
-    <path d="M11 43V17h8l12 15V17h8v26h-8L19 28v15z" fill="#f2f2f2"/>
-    <path d="M40 17h8v26h-8z" fill="url(#accent)"/>
-    <circle cx="48" cy="12" r="2.8" fill="#c8c8c8"/>
+    <rect width="60" height="60" rx="15" fill="#000000" stroke="#111111" stroke-opacity=".55"/>
+    <path d="M11 43V17h8l12 15V17h8v26h-8L19 28v15z" fill="#111111"/>
+    <path d="M40 17h8v26h-8z" fill="#000000"/>
+    <circle cx="48" cy="12" r="2.8" fill="#000000"/>
   </g>
-  <text x="74" y="35" fill="#f5f5f5" font-family="Inter,Arial,sans-serif" font-size="26" font-weight="800" letter-spacing="-1">NEXT<tspan fill="url(#accent)">BIT</tspan></text>
-  <text x="76" y="51" fill="#8b8b91" font-family="Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="3.1">UPDATES</text>
+  <text x="74" y="35" fill="#111111" font-family="Inter,Arial,sans-serif" font-size="26" font-weight="800" letter-spacing="-1">NEXT<tspan fill="#000000">BIT</tspan></text>
+  <text x="76" y="51" fill="#3f3f46" font-family="Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="3.1">UPDATES</text>
 </svg>
