@@ -50,7 +50,7 @@ button{cursor:pointer}
   border-radius:999px;
   padding:.78rem 1.25rem;
   color:#050505;
-  background:linear-gradient(130deg,#ffffff,#ff9951 50%,#ffffff);
+  background:linear-gradient(130deg,#ffffff,#a8a8a8 50%,#ffffff);
   background-size:220% 100%;
   box-shadow:0 0 0 1px rgba(255,255,255,.08),0 12px 34px rgba(255,255,255,.2),inset 0 1px 0 rgba(255,255,255,.45);
   transition:transform .25s var(--ease),box-shadow .25s ease,background-position .45s ease;
@@ -83,7 +83,7 @@ button{cursor:pointer}
 :root{
   color-scheme:dark;
   --nb-orange:#ffffff;
-  --nb-amber:#ff9f59;
+  --nb-amber:var(--color-orange,#ffffff);
   --nb-panel:rgba(16,16,20,.74);
   --nb-border:rgba(255,255,255,.1);
   --nb-glow:rgba(255,255,255,.18);
@@ -107,11 +107,11 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .glass-card img{background:linear-gradient(135deg,#18181b,#0a0a0c)}
 .liquid-button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:.4rem}
 .liquid-button:active{transform:translateY(0) scale(.985)}
-.liquid-button:focus-visible{outline-color:#ffc08f}
+.liquid-button:focus-visible{outline-color:var(--color-orange,#ffffff)}
 header{border-color:rgba(255,255,255,.09)!important;box-shadow:0 8px 32px rgba(0,0,0,.14)}
 header button{transition:color .2s ease,background .2s ease}
 header nav button{position:relative;padding:.5rem 0;font-size:.9rem;font-weight:500}
-header nav button::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:2px;background:linear-gradient(90deg,#ffffff,#ffab6f);transition:right .28s var(--ease)}
+header nav button::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:2px;background:linear-gradient(90deg,#ffffff,#c0c0c0);transition:right .28s var(--ease)}
 header nav button:hover::after,header nav button:focus-visible::after{right:0}
 .hero-title{text-wrap:balance}
 .section-heading{text-wrap:balance}
@@ -165,8 +165,8 @@ header nav button:hover::after,header nav button:focus-visible::after{right:0}
 @keyframes loadbar{from{transform:scaleX(.08)}to{transform:scaleX(1)}}
 
 /* Hover-to-define jargon micro-tooltips (Jargonizer component) */
-.jargon{border-bottom:1px dotted #ff6600;cursor:help;position:relative;text-decoration:none}
-.jargon:hover{color:#ff8a1f}
+.jargon{border-bottom:1px dotted var(--color-orange,#ffffff);cursor:help;position:relative;text-decoration:none}
+.jargon:hover{color:var(--color-orange,#ffffff)}
 .jargon:hover::after{content:attr(data-def);position:absolute;left:0;top:1.5rem;z-index:60;background:#0a0a0a;border:1px solid #333;color:#e6e6e6;padding:.5rem .7rem;width:250px;max-width:80vw;font-size:12px;line-height:1.6;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:ui-sans-serif,system-ui}
 @media(max-width:640px){.jargon:hover::after{left:-30px}}
 

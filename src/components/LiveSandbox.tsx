@@ -7,7 +7,7 @@ const START = `<!-- Edit and hit Run. This executes 100% in your browser. -->
 <h1>Hello from NextBit</h1>
 <style>
   body { font-family: system-ui, sans-serif; background:#0a0a0a; color:#e6e6e6; padding:2rem; }
-  h1 { color:#ff6600; }
+  h1 { color:#ffffff; }
 </style>
 <script>
   console.log("It works: " + (2 ** 10));
