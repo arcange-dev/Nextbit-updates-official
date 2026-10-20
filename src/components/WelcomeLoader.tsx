@@ -26,7 +26,7 @@ export default function WelcomeLoader({ done }: { done: boolean }) {
         <h1 className="hero-title font-display text-5xl font-bold leading-none md:text-7xl">NEXTBIT UPDATES</h1>
         <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-zinc-400">
           Your global ICT news web — verified technology journalism, worldwide ICT roadmaps, hands-on build
-          projects, Africa Tech coverage and live AI news &amp; models mirrored from llm-stats.com.
+          projects, Africa Tech coverage and live AI news &amp; models.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {FEATURES.map((f) => (

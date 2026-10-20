@@ -29,7 +29,7 @@ export default function Chip3D({ layers = 3, size = 220, spin = true, className 
         ))}
         <div
           className="absolute inset-[22%] border border-orange/60 bg-black"
-          style={{ transform: "translateZ(28px)", boxShadow: "0 0 60px rgba(255,106,0,0.55), inset 0 0 30px rgba(255,106,0,0.4)" }}
+          style={{ transform: "translateZ(28px)", boxShadow: "0 0 60px rgba(255,255,255,0.55), inset 0 0 30px rgba(255,255,255,0.4)" }}
         >
           <div className="grid h-full w-full gap-[3px] p-1.5" style={{ gridTemplateColumns: `repeat(${layers + 2},1fr)` }}>
             {Array.from({ length: (layers + 2) ** 2 }).map((_, i) => (
