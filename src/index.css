@@ -269,3 +269,13 @@ html[data-theme="light"] .admin-shell{background:
 html[data-theme="light"] .page-aura{background:linear-gradient(120deg,rgba(10,10,15,.06),transparent 55%)}
 /* clay clustering: soft tinted panels grouping card clusters */
 html[data-theme="light"] .space-y-5>.grid,html[data-theme="light"] .space-y-5>.glass-card{border-radius:1.5rem}
+
+/* ---------- signal illustration (Inside the signal) ---------- */
+.signal-wave{stroke-dasharray:400;animation:signal-dash 4s linear infinite}
+.signal-wave2{stroke-dasharray:400;animation:signal-dash 5.5s linear infinite reverse}
+@keyframes signal-dash{from{stroke-dashoffset:400}to{stroke-dashoffset:0}}
+.signal-core{animation:signal-pulse 2.2s ease-in-out infinite}
+@keyframes signal-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.signal-node{animation:signal-node 2.2s ease-in-out infinite}
+.signal-node2{animation:signal-node 2.2s ease-in-out infinite .8s}
+@keyframes signal-node{0%,100%{opacity:.3}50%{opacity:1}}
