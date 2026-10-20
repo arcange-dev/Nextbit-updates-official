@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Play, RotateCcw, Terminal } from "lucide-react";
+import CodeExplainer from "./CodeExplainer";
 
 // Embedded live code sandbox: runs HTML/CSS/JS snippets fully client-side in a
 // sandboxed iframe (allow-scripts only, no same-origin) — no external service.
@@ -35,6 +36,7 @@ export default function LiveSandbox() {
             <iframe key={run} title="Sandbox output" sandbox="allow-scripts" className="h-56 w-full border border-t-0 border-line bg-black/40" srcDoc={code} />
           </div>
         )}
+        <CodeExplainer code={code} language="html"/>
       </div>
     </section>
   );

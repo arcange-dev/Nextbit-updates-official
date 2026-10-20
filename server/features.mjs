@@ -12,7 +12,7 @@ const ok = (res, data) => res.json({ ok: true, data });
 /* ---------- AI tools directory ---------- */
 // GET /api/tools -> tools with live vote totals
 r.get("/tools", async (_req, res) => {
-  if (!hasDatabase()) return res.status(503).json({ ok: false, error: "Database is not configured" });
+  if (!hasDatabase()) return ok(res, []);
   try {
     const { rows } = await q(`
       SELECT t.id, t.name, t.category, t.description, t.url, t.tags,
@@ -24,14 +24,14 @@ r.get("/tools", async (_req, res) => {
     ok(res, rows);
   } catch (e) {
     console.error("tools", e);
-    res.status(500).json({ ok: false, error: "Could not load the AI directory" });
+    ok(res, []);
   }
 });
 
 /* ---------- Tech events calendar ---------- */
 // GET /api/events -> upcoming hackathons, releases and conferences
 r.get("/events", async (_req, res) => {
-  if (!hasDatabase()) return res.status(503).json({ ok: false, error: "Database is not configured" });
+  if (!hasDatabase()) return ok(res, []);
   try {
     const { rows } = await q(
       "SELECT id, title, kind, starts_at, url, location FROM events WHERE starts_at >= NOW() ORDER BY starts_at ASC LIMIT 50"
@@ -39,7 +39,7 @@ r.get("/events", async (_req, res) => {
     ok(res, rows);
   } catch (e) {
     console.error("events", e);
-    res.status(500).json({ ok: false, error: "Could not load events" });
+    ok(res, []);
   }
 });
 

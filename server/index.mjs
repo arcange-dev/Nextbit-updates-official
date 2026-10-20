@@ -99,6 +99,7 @@ app.post("/api/contact",async(req,res)=>{if(!hasDatabase())return res.status(503
 app.post("/api/analytics/events",auth,async(req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline. Restore Supabase, then try again."});const p=z.object({eventName:z.string().min(1).max(100),path:z.string().max(500).optional(),metadata:z.record(z.string(),z.any()).optional()}).safeParse(req.body);if(!p.success)return res.status(400).json({ok:false,error:"Invalid analytics event"});await q("INSERT INTO analytics_events(user_id,event_name,path,metadata) VALUES($1,$2,$3,$4)",[req.user.id,p.data.eventName,p.data.path||null,p.data.metadata?JSON.stringify(p.data.metadata):null]);return respond(res,{accepted:true},201)});
 /* ---- NextBit feature layer: AI proxy + dev-tools API ---- */
 app.use("/api",(await import("./features.mjs")).default);
+app.use("/api",(await import("./ai.mjs")).default);
 app.use("/api",(await import("./llmstats.mjs")).default);
 app.use("/api",(await import("./github.mjs")).default);
 app.use("/api",(await import("./community.mjs")).default);
