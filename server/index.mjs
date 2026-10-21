@@ -1,8 +1,10 @@
 import{sendWelcome}from "./mailer.mjs";
 import express from "express";import cors from "cors";import helmet from "helmet";import morgan from "morgan";import rateLimit from "express-rate-limit";import dotenv from "dotenv";import bcrypt from "bcryptjs";import jwt from "jsonwebtoken";import path from "node:path";
 import fs from "node:fs";import{randomUUID}from"node:crypto";import{fileURLToPath}from"node:url";import{z}from"zod";import{initDb,hasDatabase,q,verifyDatabaseConnection,databaseInfo}from"./db.mjs";import{getTrending,syncTrendingToDb}from"./news.mjs";dotenv.config();
-const app=express();const PORT=Number(process.env.PORT||10000);const JWT_SECRET=process.env.JWT_SECRET||"dev-only-change-me";const __dirname=path.dirname(fileURLToPath(import.meta.url));const root=path.resolve(__dirname,"..");const dist=path.join(root,"dist");
-app.set("trust proxy",1);app.use(helmet({contentSecurityPolicy:false,crossOriginEmbedderPolicy:false}));if(process.env.CORS_ORIGIN)app.use(cors({origin:process.env.CORS_ORIGIN.split(",").map(x=>x.trim()),credentials:true}));app.use(express.json({limit:"1mb"}));app.use(morgan("combined"));app.use("/api",rateLimit({windowMs:15*60*1000,limit:180,standardHeaders:"draft-7",legacyHeaders:false}));
+const app=express();const PORT=Number(process.env.PORT||10000);const __prod=process.env.NODE_ENV==="production";
+let JWT_SECRET=process.env.JWT_SECRET||"";
+if(!JWT_SECRET||JWT_SECRET==="dev-only-change-me"){if(__prod){JWT_SECRET=[...globalThis.crypto.getRandomValues(new Uint8Array(48))].map(b=>b.toString(16).padStart(2,"0")).join("");console.warn("[NextBit][SECURITY] JWT_SECRET is not configured. A random secret was generated for this process; admin sessions will not survive restarts. Set a strong JWT_SECRET in Render.");}else{JWT_SECRET="dev-only-change-me";}};const __dirname=path.dirname(fileURLToPath(import.meta.url));const root=path.resolve(__dirname,"..");const dist=path.join(root,"dist");
+app.set("trust proxy",1);app.use(helmet({contentSecurityPolicy:false,crossOriginEmbedderPolicy:false}));const __corsAllowed=(process.env.CORS_ORIGIN||"").split(",").map(x=>x.trim()).filter(Boolean);app.use(cors(__corsAllowed.length?{origin:__corsAllowed,credentials:true}:{}));app.use(express.json({limit:"1mb"}));app.use(morgan("combined"));app.use("/api",rateLimit({windowMs:15*60*1000,limit:180,standardHeaders:"draft-7",legacyHeaders:false}));
 const auth=async(req,res,next)=>{try{const h=req.headers.authorization;if(!h?.startsWith("Bearer "))return res.status(401).json({error:"Authentication required"});const token=h.slice(7);req.user=jwt.verify(token,JWT_SECRET);next()}catch{return res.status(401).json({error:"Invalid or expired token"})}};
 const requireAdmin=(req,res,next)=>req.user?.role==="admin"?next():res.status(403).json({error:"Admin access required"});
 const syncArticleTags=async(articleId,tagNames)=>{
@@ -56,7 +58,11 @@ app.get("/api/search",async(req,res)=>{if(!hasDatabase())return res.status(503).
    admin panel stays reachable even if Postgres is down. Brute force is limited
    by a per-IP attempt window. */
 const ADMIN_USERNAME=(process.env.ADMIN_USERNAME||"nextbitupdatesadmin").toLowerCase();
-const ADMIN_PASSWORD_HASH=process.env.ADMIN_PASSWORD_HASH||"$2b$12$0JdUcsf4W7xs4aPZbSPab.6HzgEg7kO/G.MrsR29rxnAeYna.TANa";
+/* Admin credential precedence: ADMIN_PASSWORD_HASH (bcrypt) > ADMIN_PASSWORD (hashed once at boot) > dev-only fallback.
+   In production an unconfigured credential disables admin login rather than falling back to a public committed hash. */
+let ADMIN_PASSWORD_HASH=process.env.ADMIN_PASSWORD_HASH||"";
+if(!ADMIN_PASSWORD_HASH&&process.env.ADMIN_PASSWORD)ADMIN_PASSWORD_HASH=await bcrypt.hash(process.env.ADMIN_PASSWORD,12);
+if(!ADMIN_PASSWORD_HASH)ADMIN_PASSWORD_HASH=__prod?"":bcrypt.hashSync("nextbit-admin-dev",10);
 const loginAttempts=new Map();
 const loginLimited=(ip)=>{const now=Date.now();const w=(loginAttempts.get(ip)||[]).filter(t=>now-t<15*60*1000);loginAttempts.set(ip,w);return w.length>=8};
 const loginFailed=(ip)=>{const w=loginAttempts.get(ip)||[];w.push(Date.now());loginAttempts.set(ip,w)};
@@ -65,6 +71,7 @@ app.post("/api/auth/login",async(req,res)=>{
   if(loginLimited(ip))return res.status(429).json({ok:false,error:"Too many attempts. Try again in 15 minutes."});
   const p=z.object({username:z.string().trim().min(1).max(80),password:z.string().min(1).max(200)}).safeParse(req.body);
   if(!p.success)return res.status(400).json({ok:false,error:"Enter your username and password."});
+  if(!ADMIN_PASSWORD_HASH)return res.status(503).json({ok:false,error:"Admin login is disabled: no administrator credential is configured. Set ADMIN_PASSWORD (or ADMIN_PASSWORD_HASH) in the Render environment, then try again."});
   const userOk=p.data.username.toLowerCase()===ADMIN_USERNAME;
   const passOk=await bcrypt.compare(p.data.password,ADMIN_PASSWORD_HASH);
   if(!userOk||!passOk){loginFailed(ip);return res.status(401).json({ok:false,error:"Invalid username or password."})}

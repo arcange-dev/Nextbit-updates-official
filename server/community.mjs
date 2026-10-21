@@ -8,7 +8,9 @@ import rateLimit from "express-rate-limit";
 import { hasDatabase, q } from "./db.mjs";
 
 const r = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || "dev-only-change-me";
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV==="production"
+  ? [...globalThis.crypto.getRandomValues(new Uint8Array(48))].map(b=>b.toString(16).padStart(2,"0")).join("")
+  : "dev-only-change-me");if(!process.env.JWT_SECRET&&process.env.NODE_ENV==="production")console.warn("[NextBit][SECURITY] community JWT_SECRET not configured; random per-process secret in use.");;
 const ok = (res, data, status = 200) => res.status(status).json({ ok: true, data });
 
 const db = (res) => hasDatabase() ? true : (res.status(503).json({ ok: false, error: "The database is offline. Restore Supabase, then try again." }), false);

@@ -1,89 +1,19 @@
--- NextBit Updates / Supabase PostgreSQL schema
--- Run in Supabase Dashboard -> SQL Editor.
--- The Render backend connects with DATABASE_URL.
+-- NextBit Updates — canonical PostgreSQL schema.
+-- Auto-generated from server/db.mjs and server/features.mjs (runtime initialization).
+-- Safe to run on a fresh Supabase project: all statements are idempotent.
+-- The server also self-initializes at boot; this file makes fresh setup reproducible
+-- and documents the schema drift fix (all runtime tables now live here).
+CREATE TABLE IF NOT EXISTS users(id BIGSERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,role TEXT NOT NULL DEFAULT 'user',status TEXT NOT NULL DEFAULT 'active',last_login_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;CREATE TABLE IF NOT EXISTS articles(id TEXT PRIMARY KEY,slug TEXT UNIQUE NOT NULL,category TEXT NOT NULL,title TEXT NOT NULL,summary TEXT NOT NULL,image_url TEXT,body TEXT,source_url TEXT,author TEXT,status TEXT NOT NULL DEFAULT 'draft',verified BOOLEAN NOT NULL DEFAULT FALSE,published_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());ALTER TABLE articles ADD COLUMN IF NOT EXISTS body TEXT;ALTER TABLE articles ADD COLUMN IF NOT EXISTS source_url TEXT;ALTER TABLE articles ADD COLUMN IF NOT EXISTS author TEXT;ALTER TABLE articles ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft';CREATE TABLE IF NOT EXISTS roadmaps(id TEXT PRIMARY KEY,title TEXT NOT NULL,group_name TEXT NOT NULL,description TEXT NOT NULL,stages JSONB NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY,title TEXT NOT NULL,tech TEXT NOT NULL,level TEXT NOT NULL,duration TEXT NOT NULL,parts TEXT NOT NULL,image_url TEXT,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS bookmarks(user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,article_id TEXT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),PRIMARY KEY(user_id,article_id));CREATE TABLE IF NOT EXISTS newsletter_subscribers(id BIGSERIAL PRIMARY KEY,email TEXT UNIQUE NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS contact_messages(id BIGSERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT NOT NULL,message TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'new',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS analytics_events(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,event_name TEXT NOT NULL,path TEXT,metadata JSONB,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS news_items(id TEXT PRIMARY KEY,canonical_url TEXT UNIQUE NOT NULL,title TEXT NOT NULL,summary TEXT,category TEXT NOT NULL,source_name TEXT NOT NULL,source_type TEXT NOT NULL,published_at TIMESTAMPTZ NOT NULL,fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),image_url TEXT);CREATE TABLE IF NOT EXISTS sources(id BIGSERIAL PRIMARY KEY,name TEXT NOT NULL,url TEXT NOT NULL UNIQUE,reliability TEXT NOT NULL DEFAULT 'unverified',verification_notes TEXT,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS admin_actions(id BIGSERIAL PRIMARY KEY,admin_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,action TEXT NOT NULL,target_type TEXT,target_id TEXT,metadata JSONB,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 
-create table if not exists public.users (
-  id bigserial primary key,
-  name text not null,
-  email text unique not null,
-  password_hash text not null,
-  role text not null default 'user',
-  status text not null default 'active',
-  last_login_at timestamptz,
-  created_at timestamptz not null default now()
-);
+CREATE TABLE IF NOT EXISTS ai_tools(id TEXT PRIMARY KEY,name TEXT NOT NULL,category TEXT NOT NULL,description TEXT NOT NULL,url TEXT NOT NULL UNIQUE,tags TEXT[] NOT NULL DEFAULT '{}',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE TABLE IF NOT EXISTS votes(target_id TEXT NOT NULL,kind TEXT NOT NULL CHECK (kind IN ('story','tool')),voter TEXT NOT NULL,value INT NOT NULL CHECK (value IN (-1,1)),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),PRIMARY KEY (target_id,kind,voter));
+  CREATE INDEX IF NOT EXISTS votes_target_idx ON votes (kind, target_id);
+  CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,title TEXT NOT NULL,kind TEXT NOT NULL,url TEXT,location TEXT,starts_at TIMESTAMPTZ NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 
-create table if not exists public.articles (
-  id text primary key, slug text unique not null, category text not null,
-  title text not null, summary text not null, image_url text, body text,
-  source_url text, author text, status text not null default 'draft',
-  verified boolean not null default false, published_at timestamptz,
-  created_at timestamptz not null default now()
-);
-create table if not exists public.roadmaps (id text primary key,title text not null,group_name text not null,description text not null,stages jsonb not null,created_at timestamptz not null default now());
-create table if not exists public.projects (id text primary key,title text not null,tech text not null,level text not null,duration text not null,parts text not null,image_url text,created_at timestamptz not null default now());
-create table if not exists public.bookmarks (user_id bigint not null references public.users(id) on delete cascade,article_id text not null references public.articles(id) on delete cascade,created_at timestamptz not null default now(),primary key (user_id,article_id));
-create table if not exists public.newsletter_subscribers (id bigserial primary key,email text unique not null,created_at timestamptz not null default now());
-create table if not exists public.contact_messages (id bigserial primary key,name text not null,email text not null,message text not null,status text not null default 'new',created_at timestamptz not null default now());
-create table if not exists public.analytics_events (id bigserial primary key,user_id bigint references public.users(id) on delete set null,event_name text not null,path text,metadata jsonb,created_at timestamptz not null default now());
-create table if not exists public.sources (id bigserial primary key,name text not null,url text not null unique,reliability text not null default 'unverified',verification_notes text,created_at timestamptz not null default now());
-create table if not exists public.admin_actions (id bigserial primary key,admin_user_id bigint references public.users(id) on delete set null,action text not null,target_type text,target_id text,metadata jsonb,created_at timestamptz not null default now());
-create table if not exists public.news_items (id text primary key,canonical_url text unique not null,title text not null,summary text,category text not null,source_name text not null,source_type text not null,published_at timestamptz not null,fetched_at timestamptz not null default now(),image_url text);
-
-alter table public.users add column if not exists status text not null default 'active';
-alter table public.users add column if not exists last_login_at timestamptz;
-alter table public.articles add column if not exists body text;
-alter table public.articles add column if not exists source_url text;
-alter table public.articles add column if not exists author text;
-alter table public.articles add column if not exists status text not null default 'draft';
-
-create index if not exists idx_articles_status_published on public.articles(status, published_at desc);
-create index if not exists idx_articles_category on public.articles(category);
-create index if not exists idx_roadmaps_group on public.roadmaps(group_name);
-create index if not exists idx_news_items_published on public.news_items(published_at desc);
-create index if not exists idx_news_items_category on public.news_items(category);
-create index if not exists idx_admin_actions_created on public.admin_actions(created_at desc);
-
-alter table public.users enable row level security;
-alter table public.articles enable row level security;
-alter table public.roadmaps enable row level security;
-alter table public.projects enable row level security;
-alter table public.bookmarks enable row level security;
-alter table public.newsletter_subscribers enable row level security;
-alter table public.contact_messages enable row level security;
-alter table public.analytics_events enable row level security;
-alter table public.sources enable row level security;
-alter table public.admin_actions enable row level security;
-alter table public.news_items enable row level security;
-
--- ---- Feature layer: AI tools directory, votes, tech events ----
-create table if not exists public.ai_tools (
-  id text primary key,
-  name text not null,
-  category text not null,
-  description text not null,
-  url text not null unique,
-  tags text[] not null default '{}',
-  created_at timestamptz not null default now()
-);
-
--- One vote per (target, kind, voter): the primary key makes double-voting impossible.
-create table if not exists public.votes (
-  target_id text not null,
-  kind text not null check (kind in ('story','tool')),
-  voter text not null,
-  value int not null check (value in (-1,1)),
-  created_at timestamptz not null default now(),
-  primary key (target_id, kind, voter)
-);
-create index if not exists votes_target_idx on public.votes (kind, target_id);
-
-create table if not exists public.events (
-  id text primary key,
-  title text not null,
-  kind text not null,
-  url text,
-  location text,
-  starts_at timestamptz not null,
-  created_at timestamptz not null default now()
-);
+CREATE TABLE IF NOT EXISTS categories(id TEXT PRIMARY KEY,name TEXT NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE TABLE IF NOT EXISTS tags(id TEXT PRIMARY KEY,name TEXT NOT NULL UNIQUE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE TABLE IF NOT EXISTS article_tags(article_id TEXT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,tag_id TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,PRIMARY KEY(article_id,tag_id));
+  CREATE TABLE IF NOT EXISTS comments(id BIGSERIAL PRIMARY KEY,article_id TEXT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,author_name TEXT NOT NULL,parent_id BIGINT REFERENCES comments(id) ON DELETE CASCADE,body TEXT NOT NULL CHECK(char_length(body) BETWEEN 2 AND 2000),hidden BOOLEAN NOT NULL DEFAULT FALSE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE INDEX IF NOT EXISTS comments_article_idx ON comments(article_id,created_at);
+  CREATE INDEX IF NOT EXISTS comments_parent_idx ON comments(parent_id);
+  CREATE INDEX IF NOT EXISTS articles_published_idx ON articles(status,published_at DESC);
