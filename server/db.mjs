@@ -13,7 +13,14 @@ export async function verifyDatabaseConnection({retries=5,delayMs=2500}={}){
   if(!pool)return{ok:false,error:"DATABASE_URL is not configured"};
   let lastError=null;
   for(let attempt=1;attempt<=retries;attempt++){
-    try{await pool.query("SELECT 1");return{ok:true,attempt,info:parsedDatabaseInfo}}catch(error){lastError=error;if(attempt<retries)await new Promise(r=>setTimeout(r,delayMs));}
+    try{await pool.query("SELECT 1");return{ok:true,attempt,info:parsedDatabaseInfo}}
+    catch(error){
+      lastError=error;const msg=String(error.message||"");
+      if(/password|authentication|28P01|ECIRCUITBREAKER/i.test(msg)&&!/ENOTFOUND|ECONNREFUSED|ETIMEDOUT/.test(msg)){
+        return{ok:false,error:"The database password was rejected by Supabase. Copy the Session pooler connection string from Supabase > Project Settings > Database (reset the database password if needed), then update DATABASE_URL on Render.",info:parsedDatabaseInfo};
+      }
+      if(attempt<retries)await new Promise(r=>setTimeout(r,delayMs))
+    }
   }
   return{ok:false,error:lastError?.message||"Database connection failed",info:parsedDatabaseInfo};
 }
