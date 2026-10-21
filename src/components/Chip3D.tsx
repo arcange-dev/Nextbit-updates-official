@@ -11,7 +11,7 @@ export default function Chip3D({ layers = 3, size = 220, spin = true, className 
         {slabs.map((_, i) => (
           <div
             key={i}
-            className="absolute inset-0 border border-white/10"
+            className="chip-slab absolute inset-0 border border-white/10"
             style={{ transform: `translateZ(${i * 3}px)`, background: i === 7 ? "linear-gradient(135deg,var(--color-card),var(--color-ink))" : "color-mix(in srgb,var(--color-ink) 86%,var(--color-card))" }}
           />
         ))}
@@ -28,7 +28,7 @@ export default function Chip3D({ layers = 3, size = 220, spin = true, className 
           <span key={"r" + i} className="absolute h-[3px] w-3 bg-zinc-400" style={{ top: `${10 + i * 7}%`, right: -10, transform: "translateZ(10px)" }} />
         ))}
         <div
-          className="absolute inset-[22%] border border-orange/60 bg-ink"
+          className="chip-core absolute inset-[22%] border border-orange/60 bg-ink"
           style={{ transform: "translateZ(28px)", boxShadow: "0 0 60px color-mix(in srgb,var(--color-orange) 45%,transparent), inset 0 0 30px color-mix(in srgb,var(--color-orange) 25%,transparent)" }}
         >
           <div className="grid h-full w-full gap-[3px] p-1.5" style={{ gridTemplateColumns: `repeat(${layers + 2},1fr)` }}>

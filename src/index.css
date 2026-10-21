@@ -229,12 +229,12 @@ html[data-theme="light"]{
   --color-ink:#f4f4f6;--color-card:#ffffff;--color-line:rgba(10,10,15,.14);
   --color-white:#0a0a0b;--color-zinc-300:#3f3f46;--color-zinc-400:#52525b;
   --color-zinc-500:#52525b;--color-zinc-600:#71717a;background:#f4f4f6;
-  --color-orange:#0a0a0b!important;--color-orange2:#3f3f46!important;
-  --color-neon:#18181b!important;--color-cyber:#3f3f46!important;--color-plasma:#52525b!important;
+  --color-orange:#2b2b30!important;--color-orange2:#b8b8b8!important;
+  --color-neon:#2b2b30!important;--color-cyber:#52525b!important;--color-plasma:#6b6b72!important;
 }
 /* in light mode the accent surface is black, so its label text must flip to white */
-html[data-theme="light"] .bg-orange{color:#ffffff}
-html[data-theme="light"] .liquid-button{color:#ffffff}
+html[data-theme="light"] .bg-orange{background:linear-gradient(180deg,#ffffff,#f6f6f7);color:#0a0a0b;border:1px solid rgba(10,10,15,.12);box-shadow:0 1px 2px rgba(10,10,15,.04),0 6px 14px rgba(10,10,15,.07)}
+html[data-theme="light"] .liquid-button{background:linear-gradient(180deg,#ffffff,#f6f6f7);color:#0a0a0b;border:1px solid rgba(10,10,15,.12);box-shadow:0 1px 2px rgba(10,10,15,.04),0 8px 18px rgba(10,10,15,.08)}
 html[data-theme="light"] .glass-card{border-color:rgba(10,10,15,.12)}
 html[data-theme="light"] .glass-card:hover{border-color:rgba(10,10,15,.35);box-shadow:0 30px 70px rgba(10,10,15,.12)}
 html[data-theme="light"] body{background:radial-gradient(circle at 8% 4%,rgba(255,255,255,.08),transparent 26rem),radial-gradient(circle at 92% 14%,rgba(255,154,82,.06),transparent 22rem),#f4f4f6;color:#0a0a0b}
@@ -255,11 +255,8 @@ html[data-theme="light"] .glass-card:hover{
   transform:translateY(-5px);
   border-color:rgba(10,10,15,.14);
   box-shadow:0 2px 4px rgba(10,10,15,.05),0 24px 48px rgba(10,10,15,.11),inset 0 1px 0 #fff}
-html[data-theme="light"] .liquid-button{
-  background:linear-gradient(145deg,#232327 0%,#000 100%);
-  color:#fff;border:1px solid #000;
-  box-shadow:0 10px 24px rgba(10,10,15,.2)}
-html[data-theme="light"] .liquid-button:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(10,10,15,.26)}
+html[data-theme="light"] .liquid-button{background:linear-gradient(180deg,#ffffff,#f6f6f7);color:#0a0a0b;border:1px solid rgba(10,10,15,.12);box-shadow:0 1px 2px rgba(10,10,15,.04),0 8px 18px rgba(10,10,15,.08)}
+html[data-theme="light"] .liquid-button:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(10,10,15,.05),0 14px 26px rgba(10,10,15,.12)}
 html[data-theme="light"] .liquid-button.ghost{
   background:rgba(10,10,15,.045);color:#0a0a0b;border:1px solid rgba(10,10,15,.12);box-shadow:none}
 html[data-theme="light"] header{background:rgba(251,251,252,.86);border-bottom:1px solid rgba(10,10,15,.08)}
@@ -279,3 +276,11 @@ html[data-theme="light"] .space-y-5>.grid,html[data-theme="light"] .space-y-5>.g
 .signal-node{animation:signal-node 2.2s ease-in-out infinite}
 .signal-node2{animation:signal-node 2.2s ease-in-out infinite .8s}
 @keyframes signal-node{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* ---------- light theme: genuine white rotating chip ---------- */
+html[data-theme="light"] .chip-slab{background:#ffffff!important;border-color:rgba(10,10,15,.16)!important;box-shadow:0 2px 12px rgba(10,10,15,.07)!important}
+html[data-theme="light"] .chip-core{background:#ffffff!important}
+/* ---------- light theme: admin panel treatment ---------- */
+html[data-theme="light"] .admin-side{border-color:rgba(10,10,15,.1)!important;box-shadow:0 14px 40px rgba(10,10,15,.08)!important}
+html[data-theme="light"] .admin-shell .glass-card:hover{border-color:rgba(10,10,15,.3);box-shadow:0 24px 48px rgba(10,10,15,.12)}
+html[data-theme="light"] .admin-shell input,html[data-theme="light"] .admin-shell textarea,html[data-theme="light"] .admin-shell select{background:#ffffff;border-color:rgba(10,10,15,.12)}
