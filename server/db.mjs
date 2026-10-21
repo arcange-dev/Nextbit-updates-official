@@ -1,5 +1,9 @@
 import pg from "pg";import dotenv from "dotenv";import bcrypt from "bcryptjs";import{ARTICLES,PROJECTS,ROADMAPS}from "./data.mjs";dotenv.config();
-const{Pool}=pg;const connectionString=process.env.DATABASE_URL||"";
+const{Pool}=pg;
+let connectionString=process.env.DATABASE_URL||"";
+// Supabase retired the legacy pooler hostnames (e.g. eu-west-1.pooler.supabase.com -> ENOTFOUND).
+// Rewrite legacy hosts to the current aws-0-<region> pooler so existing DATABASE_URL values keep working.
+if(connectionString){try{const _u=new URL(connectionString);const _m=/^([a-z0-9-]+)\.pooler\.supabase\.com$/.exec(_u.hostname);if(_m){_u.hostname=`aws-0-${_m[1]}.pooler.supabase.com`;connectionString=_u.toString();console.log("[NextBit] rewrote legacy Supabase pooler host to",_u.hostname);}}catch{}}
 let parsedDatabaseInfo=null;
 try{if(connectionString){const u=new URL(connectionString);parsedDatabaseInfo={host:u.hostname,port:u.port||"5432",database:u.pathname.replace(/^\//,"")||"postgres",user:u.username};}}catch{}
 export const pool=connectionString?new Pool({connectionString,max:Number(process.env.DB_POOL_MAX||5),idleTimeoutMillis:30000,connectionTimeoutMillis:Number(process.env.DB_CONNECTION_TIMEOUT||20000),keepAlive:true,ssl:{rejectUnauthorized:false}}):null;
