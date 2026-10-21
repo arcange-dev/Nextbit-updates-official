@@ -1,5 +1,5 @@
 const API=(import.meta.env.VITE_API_URL||"/api").replace(/\/$/,"");
-async function request(path:string,init:RequestInit={}){const r=await fetch(`${API}${path}`,{headers:{"Content-Type":"application/json",...(init.headers||{})},...init});const body=await r.json().catch(()=>({}));if(!r.ok)throw new Error(body.error||"Request failed");return body.data??body}
+async function request(path:string,init:RequestInit={}){const{headers,...rest}=init;const r=await fetch(`${API}${path}`,{headers:{"Content-Type":"application/json",...(headers||{})},...rest});const body=await r.json().catch(()=>({}));if(!r.ok)throw new Error(body.error||"Request failed");return body.data??body}
 const authHeaders=(token:string)=>({Authorization:`Bearer ${token}`});
 export const api={
 health:()=>request("/health"),
