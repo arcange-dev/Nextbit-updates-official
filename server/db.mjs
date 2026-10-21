@@ -3,6 +3,9 @@ const{Pool}=pg;
 let connectionString=process.env.DATABASE_URL||"";
 // Supabase retired the legacy pooler hostnames (e.g. eu-west-1.pooler.supabase.com -> ENOTFOUND).
 // Rewrite legacy hosts to the current aws-0-<region> pooler so existing DATABASE_URL values keep working.
+// Optional: SUPABASE_DB_PASSWORD overrides just the password inside DATABASE_URL (properly URL-encoded).
+// Lets you fix the connection by pasting only the database password from Supabase.
+if(connectionString&&process.env.SUPABASE_DB_PASSWORD){const _pw=process.env.SUPABASE_DB_PASSWORD;connectionString=connectionString.replace(/^([a-z][a-z0-9+.-]*:\/\/[^:@/]+):[^@]*@/i,(m,prefix)=>prefix+":"+encodeURIComponent(_pw)+"@");console.log("[NextBit] database password overridden from SUPABASE_DB_PASSWORD.");}
 if(connectionString){connectionString=connectionString.replace(/(^|[.@/])([a-z0-9-]+)\.pooler\.supabase\.com/,(m,pre,region)=>{if(/^aws-/.test(region))return m;console.log("[NextBit] rewriting legacy Supabase pooler host for region",region);return pre+"aws-0-"+region+".pooler.supabase.com"});}
 let parsedDatabaseInfo=null;
 try{if(connectionString){const u=new URL(connectionString);parsedDatabaseInfo={host:u.hostname,port:u.port||"5432",database:u.pathname.replace(/^\//,"")||"postgres",user:u.username};}}catch{}
