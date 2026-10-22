@@ -284,3 +284,21 @@ html[data-theme="light"] .chip-core{background:#ffffff!important}
 html[data-theme="light"] .admin-side{border-color:rgba(10,10,15,.1)!important;box-shadow:0 14px 40px rgba(10,10,15,.08)!important}
 html[data-theme="light"] .admin-shell .glass-card:hover{border-color:rgba(10,10,15,.3);box-shadow:0 24px 48px rgba(10,10,15,.12)}
 html[data-theme="light"] .admin-shell input,html[data-theme="light"] .admin-shell textarea,html[data-theme="light"] .admin-shell select{background:#ffffff;border-color:rgba(10,10,15,.12)}
+
+/* ===== frontend polish pass: progress, nav, tooltips, toasts, states ===== */
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.scroll-progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--color-orange);z-index:80;pointer-events:none;transition:width .12s linear}
+:is(a,button,[role="button"],input,select,textarea):focus-visible{outline:2px solid color-mix(in srgb,var(--color-orange) 70%,transparent);outline-offset:2px}
+.liquid-button:disabled,.liquid-button[aria-disabled="true"]{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none;pointer-events:none}
+button:disabled{opacity:.55;cursor:not-allowed}
+.nav-link{position:relative;transition:color .2s}
+.nav-link.active::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;border-radius:2px;background:var(--color-orange)}
+[data-tip]{position:relative}
+[data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:var(--color-card);color:var(--color-ink);border:1px solid var(--color-line);padding:.35rem .6rem;font-size:11px;line-height:1.2;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:70;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-host{position:fixed;bottom:5.5rem;left:50%;transform:translateX(-50%);z-index:90;display:grid;gap:.5rem;width:min(92vw,26rem)}
+.toast-item{display:flex;gap:.6rem;align-items:center;padding:.7rem 1rem;border-radius:14px;border:1px solid var(--color-line);background:color-mix(in srgb,var(--color-card) 92%,transparent);backdrop-filter:blur(12px);box-shadow:0 14px 34px rgba(0,0,0,.25);font-size:.85rem;animation:toast-in .35s cubic-bezier(.22,1,.36,1)}
+.toast-item.err{border-color:color-mix(in srgb,#ef4444 45%,transparent)}
+@keyframes toast-in{from{opacity:0;transform:translateY(14px) scale(.97)}}
+@media(prefers-reduced-motion:reduce){.toast-item{animation:none}[data-tip]::after{transition:none}}
