@@ -256,26 +256,6 @@ r.post("/admin/backfill-images", auth, requireAdmin, wrap(async (_req, res) => {
 }));
 
 /* ---------- smart diagnostics: one admin call, every service health-checked ---------- */
-// POST /api/admin/db-check { connectionString } -> tests a candidate connection live.
-// Lets the owner validate the Supabase connection string before pasting it into Render.
-r.post("/admin/db-check", auth, requireAdmin, wrap(async (req, res) => {
-  const raw = String(req.body?.connectionString || "").trim();
-  if (!raw) return res.status(400).json({ ok: false, error: "Paste a connection string to test." });
-  if (!/^postgres(ql)?:\/\//i.test(raw)) return res.status(400).json({ ok: false, error: "That does not look like a Postgres URI. It should start with postgresql://" });
-  // apply the same legacy-pooler rewrite the live server uses
-  const cs = raw.replace(/(^|[.@/])([a-z0-9-]+)\.pooler\.supabase\.com/, (m, pre, region) => (/^aws-/.test(region) ? m : pre + "aws-0-" + region + ".pooler.supabase.com"));
-  const host = (() => { try { return new URL(cs).hostname } catch { return "" } })();
-  const { default: pg } = await import("pg");
-  const probe = new pg.Pool({ connectionString: cs, ssl: { rejectUnauthorized: false }, max: 1, connectionTimeoutMillis: 12000 });
-  try {
-    const out = await probe.query("SELECT current_database() AS db, current_user AS usr");
-    const row = out.rows[0] || {};
-    return ok(res, { ok: true, database: row.db, user: row.usr, host, note: "This connection works. Paste the same string into Render > Environment > DATABASE_URL and save." });
-  } catch (e) {
-    return ok(res, { ok: false, error: String(e.message || e), host, note: /password|authentication|28P01/i.test(String(e.message)) ? "The host is reachable but the password is wrong. Reset the database password in Supabase, copy the fresh Session pooler URI and test it again." : "Check the host, port, project ref and password in Supabase > Project Settings > Database." });
-  } finally { try { await probe.end() } catch {} }
-}));
-
 r.get("/admin/system", auth, requireAdmin, wrap(async (_req, res) => {
   const t0 = Date.now();
   const out = { at: new Date().toISOString(), services: {} };

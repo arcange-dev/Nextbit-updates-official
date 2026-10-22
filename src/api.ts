@@ -4,7 +4,6 @@ const authHeaders=(token:string)=>({Authorization:`Bearer ${token}`});
 export const api={
 health:()=>request("/health"),
 adminSystem:(token:string)=>request("/admin/system",{headers:{authorization:`Bearer ${token}`}}),
-dbCheck:(token:string,connectionString:string)=>request("/admin/db-check",{method:"POST",headers:{authorization:`Bearer ${token}`},body:JSON.stringify({connectionString})}),
 articles:(q="")=>request(`/articles${q?`?q=${encodeURIComponent(q)}`:""}`),
 article:(id:string)=>request(`/articles/${encodeURIComponent(id)}`),
 roadmaps:()=>request("/roadmaps"),

@@ -30,6 +30,9 @@ const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
 
 export const SETTINGS_DEFAULTS = {
   copyrightText: "© {year} NextBit Updates · Technology intelligence for the future.",
+  copyrightYear: "",
+  youtubeUrl: "",
+  youtubeText: "",
   exploreHeading: "Explore",
   companyHeading: "Company",
   briefTitle: "The NextBit Brief",
@@ -67,6 +70,9 @@ const read = async () => {
 
 const schema = z.object({
   copyrightText: z.string().trim().min(3).max(300),
+  copyrightYear: z.string().trim().max(10).default(""),
+  youtubeUrl: z.string().trim().max(300).default(""),
+  youtubeText: z.string().trim().max(200).default(""),
   footerTagline: z.string().trim().min(3).max(300),
   heroTagline: z.string().trim().max(300).default(""),
   colorPrimary: z.string().regex(/^#[0-9a-fA-F]{6}$/),
