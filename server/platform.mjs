@@ -85,7 +85,9 @@ r.get("/cli/news", wrap(async (req, res) => {
 
 /* ---------- 7) AI & tech market quotes (Yahoo Finance chart API, cached) ---------- */
 const quoteCache = { at: 0, v: null };
-const SYMBOLS = ["NVDA", "MSFT", "GOOGL", "TSM", "AVGO"]; // AI + tech infrastructure
+// Famous ICT companies worldwide: devices, software, cloud, AI, chips.
+// Rates come from Yahoo Finance (auto-updating) with a 10-minute server cache.
+const SYMBOLS = ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "AMZN", "ORCL", "ADBE", "CRM", "AMD", "QCOM", "AVGO", "TSM", "ASML", "ARM", "IBM", "INTC"];
 r.get("/quotes", wrap(async (_req, res) => {
   if (quoteCache.v && Date.now() - quoteCache.at < 10 * 60 * 1000) return ok(res, quoteCache.v);
   const out = await Promise.all(SYMBOLS.map(async (s) => {

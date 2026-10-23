@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Activity, X } from "lucide-react";
 import { api } from "../api";
 
-// AI & tech market ticker: NVDA, MSFT, GOOGL, TSM, AVGO via /api/quotes
-// (Yahoo chart data, 10-min server cache). Remembers the hidden state.
+// Tech market ticker: the world's famous ICT companies via /api/quotes
+// (AAPL, MSFT, GOOGL, NVDA, META, AMZN, ORCL, ADBE, CRM, AMD, QCOM, AVGO, TSM, ASML, ARM, IBM, INTC)
+// Yahoo Finance chart data, auto-refreshed every 5 min client-side, 10-min server cache. Remembers the hidden state.
 export default function FinTicker() {
   const [quotes, setQuotes] = useState<any[]>([]);
   const [open, setOpen] = useState(() => localStorage.getItem("nb_ticker") !== "off");
