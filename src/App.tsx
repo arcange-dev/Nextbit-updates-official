@@ -292,7 +292,7 @@ const categories=Array.from(new Set(articles.map(a=>a.category).filter(Boolean))
 {tab==="inbox"&&<InboxTab contacts={contacts} databaseStatus={databaseStatus} updateContact={updateContact} />}
 
 {tab==="comments"&&<CommentsTab databaseStatus={databaseStatus} modComments={modComments} remove={remove} setModComments={setModComments} token={token} setMsg={setMsg} />}
-{tab==="newsletter"&&<NewsletterTab databaseStatus={databaseStatus} nl={nl} nlForm={nlForm} nlMsg={nlMsg} sendDigest={sendDigest} setNlForm={setNlForm} busy={busy} />}
+{tab==="newsletter"&&<NewsletterTab databaseStatus={databaseStatus} nl={nl} nlForm={nlForm} nlMsg={nlMsg} sendDigest={sendDigest} setNlForm={setNlForm} busy={busy} token={token} />}
 {tab==="settings"&&<SettingsTab save={save} saveSettings={saveSettings} setSiteSet={setSiteSet} siteMsg={siteMsg} siteSet={siteSet} busy={busy} />}
 {tab==="sources"&&<SourcesTab addSource={addSource} databaseStatus={databaseStatus} setSourceForm={setSourceForm} sourceForm={sourceForm} sources={sources} />}
 

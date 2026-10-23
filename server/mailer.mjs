@@ -124,6 +124,21 @@ r.post("/admin/newsletter/send", auth, admin, wrap(async (req, res) => {
   return ok(res, { recipients: list.length, sent, failed, lastError: lastError || undefined });
 }));
 
+// GET /api/admin/newsletter/subscribers -> the full subscriber list for the admin panel.
+r.get("/admin/newsletter/subscribers", auth, admin, wrap(async (req, res) => {
+  if (!hasDatabase()) return res.status(503).json({ ok: false, error: "The database is offline. Restore Supabase, then try again." });
+  await migrate();
+  const search = String(req.query.q || "").trim().slice(0, 120);
+  const params = [];
+  let where = "";
+  if (search) { params.push("%" + search.toLowerCase() + "%"); where = "WHERE LOWER(email) LIKE $1"; }
+  const rows = (await q(
+    `SELECT id, email, unsubscribed, created_at, last_sent_at FROM newsletter_subscribers ${where} ORDER BY created_at DESC LIMIT 500`,
+    params
+  )).rows;
+  return ok(res, { items: rows, total: rows.length });
+}));
+
 r.get("/admin/newsletter/status", auth, admin, wrap(async (_req, res) => {
   let subscribers = 0, active = 0;
   if (hasDatabase()) {
