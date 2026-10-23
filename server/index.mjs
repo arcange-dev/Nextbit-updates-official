@@ -33,7 +33,7 @@ app.get("/api/articles",async(req,res)=>{
   const cat=String(req.query.category||"").trim().slice(0,80);
   const tag=String(req.query.tag||"").trim().slice(0,80);
   const sort=req.query.sort==="old"?"ASC":req.query.sort==="az"?"az":"DESC";
-  const page=Math.max(1,Number(req.query.page)||0);
+  const page=Number(req.query.page)>0?Math.max(1,Math.floor(Number(req.query.page))):0;
   const limit=Math.min(50,Math.max(1,Number(req.query.limit)||12));
   const where=`status='published' AND ($1='' OR category=$1) AND ($2='' OR title ILIKE '%'||$2||'%' OR summary ILIKE '%'||$2||'%')`;
   const params=[cat,qv];
