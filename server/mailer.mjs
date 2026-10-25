@@ -49,7 +49,7 @@ export async function sendMail({ to, subject, html, text }) {
         body: JSON.stringify({
           sender: { name: (m?.[1] || "NextBit Updates").trim() || "NextBit Updates", email: m?.[2] || "maguruangelosharon22@gmail.com" },
           to: (Array.isArray(to) ? to : [to]).map((x) => ({ email: x })),
-          subject, htmlContent: html, textContent: text || "",
+          subject, htmlContent: html, ...(text ? { textContent: text } : {}),
         }),
       });
       const j = await resp.json().catch(() => ({}));
