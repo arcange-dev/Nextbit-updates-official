@@ -12,13 +12,16 @@ export default function EditorTab(props: any) {
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState("");
   const onFile = (f: File | null) => {
-    if (!f || !token) return;
+    if (!f) return;
+    if (!token) { setUploadMsg("Your session expired — sign out and sign in again, then retry the upload."); return; }
+    if (f.size === 0) { setUploadMsg("That file is empty (0 bytes). If it lives in OneDrive or a cloud folder, download it to your computer first, then upload again."); return; }
     if (f.size > 10 * 1024 * 1024) { setUploadMsg("Images must be 10 MB or smaller."); return; }
     setUploading(true); setUploadMsg("");
     const fr = new FileReader();
     fr.onload = () => {
       const dataUrl = String(fr.result || "");
       const b64 = dataUrl.split(",")[1] || "";
+      if (!b64 || b64.length < 32) { setUploading(false); setUploadMsg("Could not read that file (it looks empty or unreadable). Save the image to your computer (not a cloud folder) and upload again."); return; }
       api.uploadImage(token, { name: f.name, mime: f.type && f.type.startsWith("image/") ? f.type : "image/png", data: b64 })
         .then((d: any) => { setForm({ ...form, image_url: d?.url || "" }); setUploadMsg("Image uploaded and attached to this story."); })
         .catch((err: any) => setUploadMsg(err?.message || "Upload failed."))
