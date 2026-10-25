@@ -43,7 +43,7 @@ if(process.env.ADMIN_EMAIL){
   }else{
     console.warn("[NextBit] ADMIN_EMAIL is set but ADMIN_PASSWORD is missing; admin account has not been created.");
   }
-}if(ac.rows[0].c===0)for(const a of ARTICLES)await q("INSERT INTO articles(id,slug,category,title,summary,image_url,body,author,status,verified,published_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW()) ON CONFLICT DO NOTHING",[a.id,a.slug,a.category,a.title,a.summary,a.image_url,"Technology intelligence article body.","NextBit Desk","published",a.verified]);
+}for(const a of ARTICLES)await q("INSERT INTO articles(id,slug,category,title,summary,image_url,body,author,status,verified,published_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW()) ON CONFLICT DO NOTHING",[a.id,a.slug,a.category,a.title,a.summary,a.image_url,a.body||"Technology intelligence article body.","NextBit Desk","published",a.verified]);
 const rc=await q("SELECT COUNT(*)::int AS c FROM roadmaps");if(rc.rows[0].c===0)for(const r of ROADMAPS)await q("INSERT INTO roadmaps(id,title,group_name,description,stages) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",[r.id,r.title,r.group,r.description,JSON.stringify(r.stages)]);
 const pc=await q("SELECT COUNT(*)::int AS c FROM projects");if(pc.rows[0].c===0)for(const p of PROJECTS)await q("INSERT INTO projects(id,title,tech,level,duration,parts,image_url) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING",[p.id,p.title,p.tech,p.level,p.duration,p.parts,p.image_url]);await initFeatureTables();await initCommunityTables();return true}
 // ---- Feature tables (AI directory, votes, tech events) ----
