@@ -18,7 +18,7 @@ NextBit Updates is a technology-intelligence platform for ICT and electronics ne
 
 ## Admin sign-in — read this carefully
 Open `/#/login`. The sign-in page asks for a **username or email** plus password.
-- `ADMIN_USERNAME` is the preferred login identifier. If it is unset, `ADMIN_EMAIL` is used. If both are unset, local development uses `nextbitupdatesadmin`.
+- `ADMIN_EMAIL` is the preferred login identifier. If it is unset, `ADMIN_USERNAME` is used. If both are unset, local development uses `nextbitupdatesadmin`.
 - Set `ADMIN_PASSWORD` in Render to the password you want to use. When it is configured, the backend hashes and uses it in preference to `ADMIN_PASSWORD_HASH`. If you use a hash instead, it must be a valid bcrypt hash.
 - `JWT_SECRET` must be a stable, long, random secret in Render. Do not use a database password or an admin password as the JWT secret.
 - `ADMIN_EMAIL` also identifies the database admin user created/promoted on startup. Set it to the intended admin address.
@@ -33,7 +33,7 @@ The repository includes `render.yaml` as a Blueprint template. The currently run
 Required Render environment variables:
 1. `DATABASE_URL`: Supabase **Session pooler** connection string appropriate for your project. Copy it from Supabase → Project Settings → Database; do not paste a placeholder hostname.
 2. `JWT_SECRET`: a stable, long, random value.
-3. `ADMIN_EMAIL`: your intended admin email; use the same value for `ADMIN_USERNAME` when you prefer email sign-in, or leave `ADMIN_USERNAME` unset.
+3. `ADMIN_EMAIL`: your intended administrator email and the default login identifier. Set `ADMIN_USERNAME` only if you specifically want a different login name.
 4. `ADMIN_PASSWORD`: the password for the admin login. If you previously set `ADMIN_PASSWORD_HASH`, the plain `ADMIN_PASSWORD` now takes precedence; remove the hash if you do not need it.
 5. `SITE_URL`: `https://nextbit-updates-r6k2.onrender.com`.
 

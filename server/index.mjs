@@ -65,7 +65,7 @@ app.get("/api/search",async(req,res)=>{if(!hasDatabase())return res.status(503).
    hash (never plaintext) and verification does not need the database, so the
    admin panel stays reachable even if Postgres is down. Brute force is limited
    by a per-IP attempt window. */
-const ADMIN_USERNAME=(process.env.ADMIN_USERNAME||process.env.ADMIN_EMAIL||"nextbitupdatesadmin").trim().toLowerCase();
+const ADMIN_USERNAME=(process.env.ADMIN_EMAIL||process.env.ADMIN_USERNAME||"nextbitupdatesadmin").trim().toLowerCase();
 /* Prefer ADMIN_PASSWORD when set so changing the Render password cannot be silently overridden by a stale hash.
    Otherwise accept ADMIN_PASSWORD_HASH (bcrypt). No public production fallback is permitted. */
 let ADMIN_PASSWORD_HASH="";
