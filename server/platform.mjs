@@ -264,14 +264,27 @@ r.post("/admin/backfill-images", auth, requireAdmin, wrap(async (_req, res) => {
 // otherwise stores the image in the Supabase PostgreSQL database and serves it via /api/media/:id.
 // Any real image format is accepted: JPEG, PNG, WebP, GIF, SVG, AVIF, BMP, ICO, TIFF, HEIC and anything else image/*.
 const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml", "image/avif", "image/apng", "image/bmp", "image/x-ms-bmp", "image/vnd.microsoft.icon", "image/x-icon", "image/tiff", "image/heic", "image/heif", "image/jxl"]);
-r.post("/admin/media", auth, requireAdmin, wrap(async (req, res) => {
-  const name = String(req.body?.name || "upload").slice(0, 120).replace(/[^\w.-]/g, "-");
-  const mime = String(req.body?.mime || "").toLowerCase();
-  const data = String(req.body?.data || "");
-  if (!data) return res.status(400).json({ ok: false, error: "Pick an image file to upload." });
-  const isImage = IMAGE_MIMES.has(mime) || mime.startsWith("image/");
+r.post("/admin/media", auth, requireAdmin, express.raw({ type: (rq) => /^image\//i.test(String(rq.headers["content-type"] || "")), limit: "12mb" }), wrap(async (req, res) => {
+  // Two transports: direct raw image upload (preferred — the browser sends the File itself)
+  // and the older JSON { name, mime, data(base64) } shape.
+  const raw = Buffer.isBuffer(req.body) ? req.body : null;
+  const legacy = !raw && req.body && typeof req.body === "object" ? req.body : null;
+  let name = "upload", mime = "", b64 = "", size = 0;
+  if (raw) {
+    mime = String(req.headers["content-type"] || "image/png").split(";")[0].trim().toLowerCase();
+    try { name = decodeURIComponent(String(req.headers["x-filename"] || "upload")) } catch { name = "upload" }
+    name = name.slice(0, 120).replace(/[^\w.-]/g, "-") || "upload";
+    size = raw.length;
+    b64 = raw.toString("base64");
+  } else if (legacy && legacy.data) {
+    name = String(legacy.name || "upload").slice(0, 120).replace(/[^\w.-]/g, "-") || "upload";
+    mime = String(legacy.mime || "").toLowerCase();
+    b64 = String(legacy.data);
+    size = Math.floor((b64.length * 3) / 4);
+  }
+  if (!b64) return res.status(400).json({ ok: false, error: "No image data arrived. Retry the upload; if it fails again, tell me the exact message under the button." });
+  const isImage = IMAGE_MIMES.has(mime) || String(mime).startsWith("image/");
   if (!isImage) return res.status(400).json({ ok: false, error: "That file is not an image. Upload any image format (JPEG, PNG, WebP, GIF, SVG, AVIF, BMP, TIFF and others)." });
-  const size = Math.floor((data.length * 3) / 4);
   if (size > 10 * 1024 * 1024) return res.status(400).json({ ok: false, error: "Images must be 10 MB or smaller." });
   const key = `${Date.now()}-${name}`;
   const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -281,7 +294,7 @@ r.post("/admin/media", auth, requireAdmin, wrap(async (req, res) => {
       const resp = await fetch(`${BASE}/storage/v1/object/media/${encodeURIComponent(key)}`, {
         method: "POST",
         headers: { authorization: `Bearer ${SERVICE}`, "content-type": mime, "x-upsert": "true" },
-        body: Buffer.from(data, "base64"),
+        body: raw || Buffer.from(b64, "base64"),
       });
       if (!resp.ok) throw new Error(`Supabase storage responded ${resp.status}`);
       return ok(res, { url: `${BASE}/storage/v1/object/public/media/${encodeURIComponent(key)}`, storage: "supabase-bucket", key });
@@ -290,7 +303,7 @@ r.post("/admin/media", auth, requireAdmin, wrap(async (req, res) => {
     }
   }
   if (!hasDatabase()) return res.status(503).json({ ok: false, error: "The database is offline, so uploads cannot be stored yet." });
-  const id = (await q("INSERT INTO media_files (mime, size, data) VALUES ($1,$2,$3) RETURNING id", [mime, size, data])).rows[0].id;
+  const id = (await q("INSERT INTO media_files (mime, size, data) VALUES ($1,$2,$3) RETURNING id", [mime, size, b64])).rows[0].id;
   return ok(res, { url: `/api/media/${id}`, storage: "database", key: id });
 }));
 

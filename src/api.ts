@@ -50,7 +50,7 @@ myStats:(token:string)=>request("/my/stats",{headers:{authorization:`Bearer ${to
 subscribePrefs:(body:unknown)=>request("/newsletter/prefs",{method:"POST",body:JSON.stringify(body)}),
 saveSettings:(token:string,body:unknown)=>request("/admin/settings",{method:"PUT",headers:{authorization:`Bearer ${token}`},body:JSON.stringify(body)}),
 newsletterStatus:(token:string)=>request("/admin/newsletter/status",{headers:{authorization:`Bearer ${token}`}}),
-uploadImage:(token:string,payload:{name:string;mime:string;data:string})=>request("/admin/media",{method:"POST",headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},body:JSON.stringify(payload)}),
+uploadImage:(token:string,file:File)=>{const API_BASE=(import.meta.env.VITE_API_URL||"/api").replace(/\/$/,"");return fetch(`${API_BASE}/admin/media`,{method:"POST",headers:{authorization:`Bearer ${token}`,"content-type":file.type||"image/png","x-filename":encodeURIComponent(file.name||"upload")},body:file}).then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||"Upload failed. Try again.");return j.data})},
 newsletterSubscribers:(token:string,q?:string)=>request("/admin/newsletter/subscribers"+(q?`?q=${encodeURIComponent(q)}`:""),{headers:{authorization:`Bearer ${token}`}}),
 newsletterSend:(token:string,body:unknown)=>request("/admin/newsletter/send",{method:"POST",headers:{authorization:`Bearer ${token}`},body:JSON.stringify(body)}),
 adminBackfillImages:(token:string)=>request("/admin/backfill-images",{method:"POST",headers:{authorization:`Bearer ${token}`}}),
