@@ -50,6 +50,7 @@ myStats:(token:string)=>request("/my/stats",{headers:{authorization:`Bearer ${to
 subscribePrefs:(body:unknown)=>request("/newsletter/prefs",{method:"POST",body:JSON.stringify(body)}),
 saveSettings:(token:string,body:unknown)=>request("/admin/settings",{method:"PUT",headers:{authorization:`Bearer ${token}`},body:JSON.stringify(body)}),
 newsletterStatus:(token:string)=>request("/admin/newsletter/status",{headers:{authorization:`Bearer ${token}`}}),
+uploadImage:(token:string,payload:{name:string;mime:string;data:string})=>request("/admin/media",{method:"POST",headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},body:JSON.stringify(payload)}),
 newsletterSubscribers:(token:string,q?:string)=>request("/admin/newsletter/subscribers"+(q?`?q=${encodeURIComponent(q)}`:""),{headers:{authorization:`Bearer ${token}`}}),
 newsletterSend:(token:string,body:unknown)=>request("/admin/newsletter/send",{method:"POST",headers:{authorization:`Bearer ${token}`},body:JSON.stringify(body)}),
 adminBackfillImages:(token:string)=>request("/admin/backfill-images",{method:"POST",headers:{authorization:`Bearer ${token}`}}),

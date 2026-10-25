@@ -258,6 +258,51 @@ r.post("/admin/backfill-images", auth, requireAdmin, wrap(async (_req, res) => {
 }));
 
 /* ---------- smart diagnostics: one admin call, every service health-checked ---------- */
+// ---------- Image uploads (Supabase storage bucket, DB fallback) ----------
+// POST /api/admin/media { name, mime, data(base64) } -> { url }
+// Uses the Supabase Storage "media" bucket when SUPABASE_SERVICE_ROLE_KEY is configured,
+// otherwise stores the image in the Supabase PostgreSQL database and serves it via /api/media/:id.
+const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"]);
+r.post("/admin/media", auth, requireAdmin, wrap(async (req, res) => {
+  const name = String(req.body?.name || "upload").slice(0, 120).replace(/[^\w.-]/g, "-");
+  const mime = String(req.body?.mime || "").toLowerCase();
+  const data = String(req.body?.data || "");
+  if (!data) return res.status(400).json({ ok: false, error: "Pick an image file to upload." });
+  if (!IMAGE_MIMES.has(mime)) return res.status(400).json({ ok: false, error: "Only JPEG, PNG, WebP, GIF or SVG images are allowed." });
+  const size = Math.floor((data.length * 3) / 4);
+  if (size > 4 * 1024 * 1024) return res.status(400).json({ ok: false, error: "Images must be 4 MB or smaller." });
+  const key = `${Date.now()}-${name}`;
+  const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const BASE = (process.env.SUPABASE_PROJECT_URL || "").replace(/\/$/, "");
+  if (SERVICE && BASE) {
+    try {
+      const resp = await fetch(`${BASE}/storage/v1/object/media/${encodeURIComponent(key)}`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${SERVICE}`, "content-type": mime, "x-upsert": "true" },
+        body: Buffer.from(data, "base64"),
+      });
+      if (!resp.ok) throw new Error(`Supabase storage responded ${resp.status}`);
+      return ok(res, { url: `${BASE}/storage/v1/object/public/media/${encodeURIComponent(key)}`, storage: "supabase-bucket", key });
+    } catch (e) {
+      console.error("[NextBit] storage upload failed, falling back to database:", e?.message);
+    }
+  }
+  if (!hasDatabase()) return res.status(503).json({ ok: false, error: "The database is offline, so uploads cannot be stored yet." });
+  const id = (await q("INSERT INTO media_files (mime, size, data) VALUES ($1,$2,$3) RETURNING id", [mime, size, data])).rows[0].id;
+  return ok(res, { url: `/api/media/${id}`, storage: "database", key: id });
+}));
+
+// GET /api/media/:id -> serves a database-backed image publicly with long-lived caching.
+r.get("/media/:id", wrap(async (req, res) => {
+  const id = String(req.params.id || "").slice(0, 64);
+  if (!/^[-\w]+$/.test(id)) return res.status(400).json({ ok: false, error: "Invalid image id." });
+  const row = (await q("SELECT mime, data FROM media_files WHERE id=$1", [id])).rows[0];
+  if (!row) return res.status(404).json({ ok: false, error: "Image not found." });
+  res.set("content-type", row.mime);
+  res.set("cache-control", "public, max-age=31536000, immutable");
+  return res.send(Buffer.from(row.data, "base64"));
+}));
+
 r.get("/admin/system", auth, requireAdmin, wrap(async (_req, res) => {
   const t0 = Date.now();
   const out = { at: new Date().toISOString(), services: {} };

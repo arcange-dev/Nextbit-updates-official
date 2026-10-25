@@ -300,7 +300,7 @@ const categories=Array.from(new Set(articles.map(a=>a.category).filter(Boolean))
 
 {tab==="activity"&&<ActivityTab activity={activity} databaseStatus={databaseStatus} />}
 
-{tab==="editor"&&<EditorTab databaseStatus={databaseStatus} editing={editing} save={save} setTab={setTab} setForm={setForm} form={form} />}</section></div></div></main>}
+{tab==="editor"&&<EditorTab databaseStatus={databaseStatus} editing={editing} save={save} setTab={setTab} setForm={setForm} form={form} token={token} />}</section></div></div></main>}
 function Editor(){return <Page title="Article editor" kicker="Draft → verify → publish"><div className="grid gap-6 lg:grid-cols-[1fr_320px]"><div className="border border-line bg-card p-7"><input className="w-full border-b border-line bg-transparent py-4 font-display text-3xl font-bold outline-none" placeholder="Article headline..."/><textarea className="mt-7 min-h-64 w-full border border-line bg-ink p-5 leading-7 outline-none" placeholder="Write the article body..."/></div><aside className="border border-line bg-card p-6"><div className="font-mono text-[10px] text-orange">PUBLISHING</div>{["Draft","In review","Fact check","Verified","Published"].map(x=><button key={x} className="mt-3 flex w-full items-center border border-line p-3 text-left text-sm"><span className="mr-3 size-2 rounded-full bg-orange"/>{x}<Check className="ml-auto text-zinc-700" size={14}/></button>)}<button className="mt-6 w-full bg-orange py-3 font-semibold text-black">Save draft</button></aside></div></Page>}
 function SearchPage(){
   const[q,setQ]=useState("");const[tab,setTab]=useState<"all"|"articles"|"roadmaps"|"projects">("all");
