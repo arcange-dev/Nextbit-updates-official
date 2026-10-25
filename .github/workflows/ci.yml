@@ -20,5 +20,7 @@ jobs:
         run: npm ci
       - name: Check all backend modules
         run: for file in server/*.mjs; do node --check "$file" || exit 1; done
+      - name: Run unit tests
+        run: node --test server/*.test.mjs
       - name: Build frontend
         run: npm run build

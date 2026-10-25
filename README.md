@@ -68,5 +68,5 @@ npm start
 - The Render free web service can spin down after inactivity.
 - Public RSS providers can rate-limit, block or change feeds; external stories should link to the original article and retain source attribution.
 - AI, email delivery, GitHub API and OAuth features remain dependent on their respective credentials and provider rules.
-- CI currently validates module syntax and the production build; automated browser/end-to-end tests are still a recommended next step.
+- CI runs `npm ci`, syntax-checks every backend module, runs the news-cache unit tests, and builds the production frontend. Automated browser/end-to-end tests are still a recommended next step.
 - Use `.gitignore` so local `node_modules/`, compiled `dist/`, secrets and test artifacts are not committed.
