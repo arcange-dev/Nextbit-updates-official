@@ -149,3 +149,28 @@ r.get("/admin/newsletter/status", auth, admin, wrap(async (_req, res) => {
 }));
 
 export default r;
+
+// Scheduled weekly digest: checks every 30 minutes and sends on Monday 09:00 SAST (07:00 UTC)
+// if the configured email provider is ready and no digest went out in the last 6 days.
+export async function maybeSendWeeklyDigest() {
+  try {
+    if (!hasDatabase() || !mailConfigured()) return;
+    const now = new Date();
+    const sast = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    if (sast.getUTCDay() !== 1 || sast.getUTCHours() !== 9) return;
+    const last = (await q("SELECT MAX(last_sent_at) AS t FROM newsletter_subscribers")).rows[0]?.t;
+    if (last && Date.now() - new Date(last).getTime() < 6 * 24 * 60 * 60 * 1000) return;
+    const stories = (await q("SELECT id, title, summary, category, image_url FROM articles WHERE status='published' ORDER BY published_at DESC NULLS LAST LIMIT 6")).rows;
+    if (!stories.length) return;
+    await migrate();
+    const subject = `The NextBit Brief — ${sast.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+    const list = (await q("SELECT email FROM newsletter_subscribers WHERE unsubscribed=FALSE")).rows;
+    let sent = 0, failed = 0;
+    for (const sub of list) {
+      const html = shell(subject, stories.map((a) => `<div style="margin:0 0 18px;padding:16px;border:1px solid #232323;border-radius:12px;background:#0c0c0f">${a.image_url ? `<img src="${esc(String(a.image_url))}" alt="" width="560" style="max-width:100%;border-radius:8px">` : ""}<div style="color:#ff6a00;font-size:11px;letter-spacing:.2em;font-weight:700">${esc(String(a.category).toUpperCase())}</div><a href="${SITE}/#/article/${esc(a.id)}" style="display:block;margin:6px 0;color:#fff;font-size:19px;font-weight:700;text-decoration:none">${esc(a.title)}</a><div style="color:#aaa;font-size:14px;line-height:1.6">${esc(String(a.summary || "").slice(0, 200))}</div></div>`).join(""));
+      const out = await sendMail({ to: sub.email, subject, html });
+      if (out.ok) { sent++; try { await q("UPDATE newsletter_subscribers SET last_sent_at=NOW() WHERE email=$1", [sub.email]); } catch {} } else failed++;
+    }
+    console.log(`[NextBit] weekly digest: ${sent} sent, ${failed} failed (${list.length} subscribers).`);
+  } catch (e) { console.error("[NextBit] weekly digest skipped:", e?.message); }
+}
