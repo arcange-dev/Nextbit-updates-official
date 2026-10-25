@@ -15,9 +15,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
       - name: Install
-        run: npm install
-      - name: Check backend syntax
-        run: node --check server/index.mjs && node --check server/db.mjs && node --check server/data.mjs && node --check server/news.mjs
+        run: npm ci
+      - name: Check all backend modules
+        run: for file in server/*.mjs; do node --check "$file" || exit 1; done
       - name: Build frontend
         run: npm run build

@@ -17,3 +17,48 @@ CREATE TABLE IF NOT EXISTS categories(id TEXT PRIMARY KEY,name TEXT NOT NULL,cre
   CREATE INDEX IF NOT EXISTS comments_article_idx ON comments(article_id,created_at);
   CREATE INDEX IF NOT EXISTS comments_parent_idx ON comments(parent_id);
   CREATE INDEX IF NOT EXISTS articles_published_idx ON articles(status,published_at DESC);
+
+
+-- Runtime tables / columns used by image upload, site settings, newsletter and job board.
+-- Keep this schema suitable for a fresh Supabase project, not just an already-running app.
+ALTER TABLE newsletter_subscribers ADD COLUMN IF NOT EXISTS prefs JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE newsletter_subscribers ADD COLUMN IF NOT EXISTS unsubscribed BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE newsletter_subscribers ADD COLUMN IF NOT EXISTS last_sent_at TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS media_files (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  mime TEXT NOT NULL,
+  size INTEGER NOT NULL DEFAULT 0,
+  data TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS site_settings (
+  id INT PRIMARY KEY DEFAULT 1,
+  data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT site_settings_one_row CHECK (id = 1)
+);
+INSERT INTO site_settings(id, data) VALUES (1, '{}'::jsonb) ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS jobs (
+  id TEXT PRIMARY KEY,
+  title VARCHAR(120) NOT NULL,
+  company VARCHAR(80) NOT NULL,
+  location VARCHAR(80) DEFAULT 'Remote',
+  workplace VARCHAR(10) DEFAULT 'remote',
+  tag VARCHAR(20) DEFAULT 'AI',
+  salary_min INT DEFAULT 0,
+  salary_max INT DEFAULT 0,
+  currency VARCHAR(8) DEFAULT 'USD',
+  stack TEXT[] NOT NULL DEFAULT '{}',
+  apply_url TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  status VARCHAR(10) NOT NULL DEFAULT 'live',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS xp INT NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS articles_published_idx ON articles(status, published_at DESC);
+CREATE INDEX IF NOT EXISTS news_items_published_idx ON news_items(published_at DESC);
+CREATE INDEX IF NOT EXISTS admin_actions_created_idx ON admin_actions(created_at DESC);
