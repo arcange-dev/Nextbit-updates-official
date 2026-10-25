@@ -327,9 +327,11 @@ r.get("/admin/system", auth, requireAdmin, wrap(async (_req, res) => {
     out.services.database = { ok: true, ms: Date.now() - t };
   } catch (e) { out.services.database = { ok: false, error: String(e.message || e).slice(0, 140) }; }
   // 2) transactional email
-  out.services.mail = process.env.RESEND_API_KEY
+  out.services.mail = process.env.BREVO_API_KEY
+    ? { ok: true, detail: "Brevo key configured" }
+    : process.env.RESEND_API_KEY
     ? { ok: true, detail: "Resend key configured" }
-    : { ok: false, detail: "RESEND_API_KEY not set on Render" };
+    : { ok: false, detail: "BREVO_API_KEY not set on Render" };
   // 3) external intelligence feeds the site depends on
   const ping = async (url) => {
     const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 6000);
