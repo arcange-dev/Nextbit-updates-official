@@ -41,7 +41,7 @@ Optional integrations:
 - AI features: `NEXTBIT_AI_ENDPOINT`, `NEXTBIT_AI_KEY`, and optional `NEXTBIT_AI_MODEL` (defaults to `gpt-4o-mini`). Use an OpenAI-compatible endpoint.
 - Supabase Storage uploads: `SUPABASE_SERVICE_ROLE_KEY` (keep secret; never expose it in frontend variables). Database-backed image storage is used as a fallback.
 - Newsletter mail: `RESEND_API_KEY` and a sender address in `MAIL_FROM` verified with the provider.
-- GitHub data and OAuth: `GITHUB_TOKEN`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`; Google OAuth uses `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. OAuth provider credentials must be configured in the provider console and use the callback URL shown in `server/oauth.mjs`.
+- GitHub data integrations use `GITHUB_TOKEN` when available. An OAuth module is present in the repository but the frontend callback/session flow is not yet enabled; do not treat Google/GitHub OAuth sign-in as launch-ready.
 
 ### Database connection steps
 1. Open the correct Supabase project and go to **Project Settings → Database**.
