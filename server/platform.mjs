@@ -272,7 +272,7 @@ r.post("/admin/media", auth, requireAdmin, wrap(async (req, res) => {
   const isImage = IMAGE_MIMES.has(mime) || mime.startsWith("image/");
   if (!isImage) return res.status(400).json({ ok: false, error: "That file is not an image. Upload any image format (JPEG, PNG, WebP, GIF, SVG, AVIF, BMP, TIFF and others)." });
   const size = Math.floor((data.length * 3) / 4);
-  if (size > 4 * 1024 * 1024) return res.status(400).json({ ok: false, error: "Images must be 4 MB or smaller." });
+  if (size > 10 * 1024 * 1024) return res.status(400).json({ ok: false, error: "Images must be 10 MB or smaller." });
   const key = `${Date.now()}-${name}`;
   const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const BASE = (process.env.SUPABASE_PROJECT_URL || "").replace(/\/$/, "");
