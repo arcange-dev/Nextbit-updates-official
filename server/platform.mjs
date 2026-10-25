@@ -262,13 +262,15 @@ r.post("/admin/backfill-images", auth, requireAdmin, wrap(async (_req, res) => {
 // POST /api/admin/media { name, mime, data(base64) } -> { url }
 // Uses the Supabase Storage "media" bucket when SUPABASE_SERVICE_ROLE_KEY is configured,
 // otherwise stores the image in the Supabase PostgreSQL database and serves it via /api/media/:id.
-const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"]);
+// Any real image format is accepted: JPEG, PNG, WebP, GIF, SVG, AVIF, BMP, ICO, TIFF, HEIC and anything else image/*.
+const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml", "image/avif", "image/apng", "image/bmp", "image/x-ms-bmp", "image/vnd.microsoft.icon", "image/x-icon", "image/tiff", "image/heic", "image/heif", "image/jxl"]);
 r.post("/admin/media", auth, requireAdmin, wrap(async (req, res) => {
   const name = String(req.body?.name || "upload").slice(0, 120).replace(/[^\w.-]/g, "-");
   const mime = String(req.body?.mime || "").toLowerCase();
   const data = String(req.body?.data || "");
   if (!data) return res.status(400).json({ ok: false, error: "Pick an image file to upload." });
-  if (!IMAGE_MIMES.has(mime)) return res.status(400).json({ ok: false, error: "Only JPEG, PNG, WebP, GIF or SVG images are allowed." });
+  const isImage = IMAGE_MIMES.has(mime) || mime.startsWith("image/");
+  if (!isImage) return res.status(400).json({ ok: false, error: "That file is not an image. Upload any image format (JPEG, PNG, WebP, GIF, SVG, AVIF, BMP, TIFF and others)." });
   const size = Math.floor((data.length * 3) / 4);
   if (size > 4 * 1024 * 1024) return res.status(400).json({ ok: false, error: "Images must be 4 MB or smaller." });
   const key = `${Date.now()}-${name}`;
