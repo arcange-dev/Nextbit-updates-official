@@ -1,7 +1,9 @@
 // Newsletter mailer: welcome email on subscribe, one-click unsubscribe, and a
 // "send digest" that emails the latest published stories to every subscriber.
 // Uses the Resend HTTP API (no SDK, no extra dependency). Activate by setting
-// RESEND_API_KEY (and optionally MAIL_FROM) in the Render environment.
+// BREVO_API_KEY (recommended — free 300 emails/day, verify your address as sender at brevo.com)
+// or RESEND_API_KEY (limited to your own address without a verified domain).
+// Optionally set MAIL_FROM, e.g. 'NextBit Updates <you@gmail.com>'.
 import express from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
@@ -10,7 +12,7 @@ import { hasDatabase, q } from "./db.mjs";
 const r = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-only-change-me";
 const SITE = (process.env.SITE_URL || "https://nextbit-updates-r6k2.onrender.com").replace(/\/$/, "");
-const FROM = process.env.MAIL_FROM || "NextBit Updates <onboarding@resend.dev>";
+const FROM = process.env.MAIL_FROM || (process.env.BREVO_API_KEY ? "NextBit Updates <maguruangelosharon22@gmail.com>" : "NextBit Updates <onboarding@resend.dev>");
 const ok = (res, data, status = 200) => res.status(status).json({ ok: true, data });
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -31,11 +33,31 @@ const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
   res.status(503).json({ ok: false, error: ((e.code==="ENOTFOUND"||e.code==="ECONNREFUSED"||e.code==="ETIMEDOUT"||/pooler\.supabase\.com|supabase\.com/.test(String(e.message)))) ? "The database is offline. Restore Supabase, then try again." : "Something went wrong" });
 });
 
-export const mailConfigured = () => Boolean(process.env.RESEND_API_KEY);
+export const mailConfigured = () => Boolean(process.env.BREVO_API_KEY || process.env.RESEND_API_KEY);
+export const mailProvider = () => (process.env.BREVO_API_KEY ? "brevo" : process.env.RESEND_API_KEY ? "resend" : null);
 
 /** Low-level send through Resend. Returns { ok, error? } and never throws. */
 export async function sendMail({ to, subject, html, text }) {
-  if (!mailConfigured()) return { ok: false, error: "Email sending is not configured (missing RESEND_API_KEY)" };
+  if (!mailConfigured()) return { ok: false, error: "Email sending is not configured (add BREVO_API_KEY in Render)" };
+  // Provider 1: Brevo (free 300/day; verify your email as sender at brevo.com)
+  if (process.env.BREVO_API_KEY) {
+    try {
+      const m = /^\s*"?([^"<>]*?)"?\s*<([^>]+)>\s*$/.exec(FROM);
+      const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: { "api-key": process.env.BREVO_API_KEY, "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({
+          sender: { name: (m?.[1] || "NextBit Updates").trim() || "NextBit Updates", email: m?.[2] || "maguruangelosharon22@gmail.com" },
+          to: (Array.isArray(to) ? to : [to]).map((x) => ({ email: x })),
+          subject, htmlContent: html, textContent: text || "",
+        }),
+      });
+      const j = await resp.json().catch(() => ({}));
+      if (resp.ok && !j.code) return { ok: true, id: j.messageId || j.message };
+      return { ok: false, error: "Brevo " + resp.status + ": " + (j.message || j.code || "send failed") };
+    } catch (e) { return { ok: false, error: "Brevo request failed: " + (e?.message || e) } }
+  }
+  // Provider 2: Resend (free plan only delivers to your own address without a verified domain)
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), 15000);
   try {
@@ -145,7 +167,7 @@ r.get("/admin/newsletter/status", auth, admin, wrap(async (_req, res) => {
     await migrate();
     try { const x = (await q("SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE unsubscribed=FALSE)::int AS active FROM newsletter_subscribers")).rows[0]; subscribers = x.total; active = x.active; } catch {}
   }
-  return ok(res, { configured: mailConfigured(), from: FROM, subscribers, active });
+  return ok(res, { configured: mailConfigured(), provider: mailProvider(), from: FROM, subscribers, active });
 }));
 
 export default r;
