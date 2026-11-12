@@ -25,39 +25,24 @@ const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
 /* ---------- Devices catalogue ---------- */
 const WIKI = "https://en.wikipedia.org/w/api.php";
 const CATEGORIES = [
-  ["Smartphones", "iPhone 17 Pro"],
-  ["Smartphones", "Samsung Galaxy S25 Ultra"],
-  ["Smartphones", "Google Pixel 10"],
-  ["Smartphones", "Xiaomi 15"],
-  ["Smartphones", "OnePlus 13"],
-  ["Smartphones", "Samsung Galaxy A56"],
-  ["Smartphones", "Tecno Camon"],
-  ["Smartphones", "Infinix Note"],
-  ["Laptops & PCs", "MacBook Pro"],
-  ["Laptops & PCs", "MacBook Air"],
-  ["Laptops & PCs", "Dell XPS 13"],
-  ["Laptops & PCs", "ThinkPad X1 Carbon"],
-  ["Laptops & PCs", "Surface Laptop"],
-  ["Laptops & PCs", "HP Spectre"],
-  ["Laptops & PCs", "Asus ROG"],
-  ["Laptops & PCs", "Raspberry Pi 5"],
-  ["TVs", "LG OLED TV"],
-  ["TVs", "Samsung QLED"],
-  ["TVs", "Sony Bravia"],
-  ["Tablets", "iPad Pro"],
-  ["Tablets", "Samsung Galaxy Tab"],
-  ["Tablets", "Surface Pro"],
-  ["Wearables", "Apple Watch"],
-  ["Wearables", "Samsung Galaxy Watch"],
-  ["Wearables", "Garmin Forerunner"],
-  ["Audio", "AirPods Pro"],
-  ["Audio", "Sony WH-1000XM5"],
-  ["Audio", "Bose QuietComfort"],
-  ["Consoles", "PlayStation 5"],
-  ["Consoles", "Xbox Series X and Series S"],
-  ["Consoles", "Nintendo Switch"],
-  ["Cameras", "Canon EOS R"],
-  ["Cameras", "Sony Alpha 7"],
+  ["Smartphones","iPhone"],["Smartphones","Samsung Galaxy"],["Smartphones","Google Pixel"],["Smartphones","Xiaomi Redmi"],
+  ["Smartphones","OnePlus"],["Smartphones","Huawei P series"],["Smartphones","Honor smartphone"],["Smartphones","Oppo Find"],
+  ["Smartphones","Vivo X series"],["Smartphones","Realme"],["Smartphones","Motorola Edge"],["Smartphones","Nokia smartphone"],
+  ["Smartphones","Sony Xperia"],["Smartphones","Tecno Mobile"],["Smartphones","Infinix Mobile"],["Smartphones","Itel mobile"],
+  ["Smartphones","Asus ROG Phone"],["Smartphones","Nothing Phone"],
+  ["Laptops & PCs","MacBook Pro"],["Laptops & PCs","MacBook Air"],["Laptops & PCs","Dell XPS"],["Laptops & PCs","Dell Inspiron"],
+  ["Laptops & PCs","ThinkPad"],["Laptops & PCs","HP Spectre"],["Laptops & PCs","HP Pavilion"],["Laptops & PCs","Asus Zenbook"],
+  ["Laptops & PCs","Acer Swift"],["Laptops & PCs","MSI laptop"],["Laptops & PCs","Surface Pro"],["Laptops & PCs","Razer Blade"],
+  ["Laptops & PCs","Samsung Galaxy Book"],["Laptops & PCs","Huawei MateBook"],["Laptops & PCs","Xiaomi RedmiBook"],
+  ["TVs","LG OLED"],["TVs","Samsung QLED"],["TVs","Sony Bravia"],["TVs","TCL Technology"],["TVs","Hisense"],
+  ["TVs","Philips television"],["TVs","Panasonic TV"],["TVs","Sharp Corporation"],
+  ["Tablets","IPad"],["Tablets","Samsung Galaxy Tab"],["Tablets","Microsoft Surface"],["Tablets","Xiaomi Pad"],["Tablets","Lenovo Tab"],
+  ["Wearables","Apple Watch"],["Wearables","Samsung Galaxy Watch"],["Wearables","Garmin watch"],["Wearables","Fitbit"],
+  ["Wearables","Xiaomi Mi Band"],["Wearables","Huawei Watch"],
+  ["Audio","AirPods"],["Audio","Sony WH-1000X"],["Audio","Bose QuietComfort"],["Audio","Sennheiser headphones"],
+  ["Audio","JBL speaker"],["Audio","Beats Electronics"],
+  ["Consoles","PlayStation 5"],["Consoles","Xbox Series X"],["Consoles","Nintendo Switch"],["Consoles","Steam Deck"],
+  ["Cameras","Canon EOS"],["Cameras","Nikon"],["Cameras","Sony Alpha"],["Cameras","Fujifilm"],
 ];
 
 async function wikiSearch(term) {
@@ -77,8 +62,9 @@ export async function syncDevices() {
   try { await q("DELETE FROM devices"); } catch (e) { console.warn("[devices] purge failed:", e?.message); }
   let synced = 0;
   for (const [category, term] of CATEGORIES) {
+    await new Promise((r) => setTimeout(r, 180));
     try {
-      const pages = await wikiSearch(term);
+      const pages = await wikiSearch(term).catch(async () => { await new Promise((r) => setTimeout(r, 800)); return wikiSearch(term); });
       for (const p of pages) {
         const name = String(p.title || "").trim();
         if (!name || GENERIC.test(name)) continue;

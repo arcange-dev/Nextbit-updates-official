@@ -42,6 +42,7 @@ export function OrgLogo({ org, size = 18, className = "" }: { org: string; size?
 
 const fmtPrice = (p: number | null) => (p == null ? "—" : p >= 1 ? `$${p}` : `$${p}`);
 const fmtCtx = (c: number | null) => (c == null ? "—" : c >= 1000000 ? `${(c / 1000000).toFixed(0)}M` : `${Math.round(c / 1000)}K`);
+const isNew = (d: string | null) => Boolean(d && Date.now() - new Date(d).getTime() < 60 * 24 * 3600 * 1000);
 const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—");
 
 // Live AI wire: news feed + full model catalogue with pricing and performance.
@@ -49,6 +50,7 @@ const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString(undefi
 export default function LLMStatsHub() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [models, setModels] = useState<Model[]>([]);
+  const [selected, setSelected] = useState<Model | null>(null);
   const [newsErr, setNewsErr] = useState("");
   const [q, setQ] = useState("");
   const [org, setOrg] = useState("All");
@@ -140,7 +142,7 @@ export default function LLMStatsHub() {
                 {visible.map((m) => (
                   <tr key={m.id} className="border-b border-line/60 transition hover:bg-white/[0.03]">
                     <td className="px-4 py-3">
-                      <span className="flex items-center gap-2"><OrgLogo org={m.org} size={20} /><span className="font-display font-semibold">{m.name}</span></span>
+                      <span className="flex items-center gap-2"><OrgLogo org={m.org} size={20} /><button onClick={() => setSelected(m)} className="font-display font-semibold text-left underline-offset-4 hover:text-orange hover:underline" title="Open model details">{m.name}</button>{isNew(m.releasedAt) && <span className="rounded-full border border-orange/40 px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-widest text-orange">New</span>}</span>
                       <span className="mt-0.5 block pl-7 text-[11px] text-mute">{m.org}</span>
                     </td>
                     <td className="px-4 py-3 text-mute">{fmtDate(m.releasedAt)}</td>
@@ -163,6 +165,44 @@ export default function LLMStatsHub() {
         <p className="mt-3 text-[11px] text-mute">
           Cached 10 minutes server-side.
         </p>
+        {selected && (
+          <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label={selected.name + " details"} onClick={() => setSelected(null)}>
+            <div className="glass-card max-h-[88vh] w-full max-w-2xl overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <OrgLogo org={selected.org} size={40} />
+                  <div>
+                    <h3 className="font-display text-2xl font-bold">{selected.name}</h3>
+                    <p className="text-xs text-mute">{selected.org}{isNew(selected.releasedAt) ? " · newly released" : ""}</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelected(null)} className="rounded-full border border-line px-3 py-1 text-xs text-mute hover:text-white" aria-label="Close">Close</button>
+              </div>
+              <p className="mt-4 text-sm leading-7 text-zinc-400">
+                {selected.name} is a {selected.org} model{selected.releasedAt ? " released " + fmtDate(selected.releasedAt) : ""}
+                {selected.contextWindow ? ", handling up to " + fmtCtx(selected.contextWindow) + " tokens of context" : ""}.
+                {selected.outputPrice != null ? " Output tokens cost " + fmtPrice(selected.outputPrice) + " per million" : ""}
+                {selected.inputPrice != null ? ", input tokens " + fmtPrice(selected.inputPrice) + " per million" : ""}.
+                {selected.throughput ? " Measured throughput " + selected.throughput + " tokens/second" : ""}
+                {selected.latencyMs ? ", " + selected.latencyMs + " ms average latency" : ""}. Pricing and performance are cloned live from llm-stats.com.
+              </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="glass-card p-4"><div className="font-mono text-[9px] uppercase tracking-widest text-orange">Output tokens</div><div className="mt-1 text-lg font-semibold">{fmtPrice(selected.outputPrice)} <span className="text-xs text-mute">/ 1M tokens</span></div></div>
+                <div className="glass-card p-4"><div className="font-mono text-[9px] uppercase tracking-widest text-orange">Input tokens</div><div className="mt-1 text-lg font-semibold">{fmtPrice(selected.inputPrice)} <span className="text-xs text-mute">/ 1M tokens</span></div></div>
+                <div className="glass-card p-4"><div className="font-mono text-[9px] uppercase tracking-widest text-mute">Context window</div><div className="mt-1 text-lg font-semibold">{fmtCtx(selected.contextWindow)}</div></div>
+                <div className="glass-card p-4"><div className="font-mono text-[9px] uppercase tracking-widest text-mute">Speed / latency</div><div className="mt-1 text-lg font-semibold">{selected.throughput ?? "—"} tok/s · {selected.latencyMs ?? "—"} ms</div></div>
+              </div>
+              <div className="mt-5">
+                <div className="font-mono text-[9px] uppercase tracking-widest text-mute">Resources</div>
+                <div className="mt-2 grid gap-2 text-sm">
+                  <a href="https://llm-stats.com/models" target="_blank" rel="noreferrer" className="flex items-center justify-between border border-line px-3 py-2 hover:border-orange">Live comparison on llm-stats.com <ArrowUpRight size={13} /></a>
+                  <a href={"https://www.google.com/search?q=" + encodeURIComponent(selected.org + " " + selected.name + " official docs pricing")} target="_blank" rel="noreferrer" className="flex items-center justify-between border border-line px-3 py-2 hover:border-orange">Official docs & pricing search <ArrowUpRight size={13} /></a>
+                  <a href={"https://www.google.com/search?q=" + encodeURIComponent(selected.name + " model card paper")} target="_blank" rel="noreferrer" className="flex items-center justify-between border border-line px-3 py-2 hover:border-orange">Model card / paper <ArrowUpRight size={13} /></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
