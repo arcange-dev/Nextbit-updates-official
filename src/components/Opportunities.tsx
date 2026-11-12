@@ -55,9 +55,23 @@ export default function Opportunities() {
   const [kind, setKind] = useState("All");
   const [scope, setScope] = useState("All");
   const [events, setEvents] = useState<any[]>([]);
-  const ALL = [...OPPS, ...GLOBAL];
+  const [adminJobs, setAdminJobs] = useState<Opp[]>([]);
+  const ALL = [...adminJobs, ...OPPS, ...GLOBAL];
   const list = ALL.filter((o) => (scope === "All" || o.scope === scope) && (kind === "All" || o.kind === kind));
   useEffect(() => { api.events().then((d: any) => setEvents(d || [])).catch(() => {}); }, []);
+  useEffect(() => {
+    api.jobs()
+      .then((rows: any) => setAdminJobs((rows || []).map((j: any) => ({
+        title: j.title,
+        kind: j.kind || "Program",
+        region: j.region || "Africa",
+        what: (j.org ? j.org + " · " : "") + (j.deadline ? "Deadline " + String(j.deadline).slice(0, 10) : "Added by NextBit"),
+        url: j.url || "#",
+        tag: j.org || "NextBit",
+        scope: /global|remote/i.test(j.region || "") ? "global" : "africa",
+      }))))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="grid gap-10">

@@ -7,6 +7,7 @@ if(!JWT_SECRET||JWT_SECRET==="dev-only-change-me"){if(__prod){JWT_SECRET=[...glo
 app.set("trust proxy",1);app.use(helmet({contentSecurityPolicy:false,crossOriginEmbedderPolicy:false}));const __corsAllowed=(process.env.CORS_ORIGIN||"").split(",").map(x=>x.trim()).filter(Boolean);app.use(cors(__corsAllowed.length?{origin:__corsAllowed,credentials:true}:{}));app.use(express.json({limit:"20mb"}));app.use(morgan("combined"));app.use("/api",rateLimit({windowMs:15*60*1000,limit:180,standardHeaders:"draft-7",legacyHeaders:false}));
 const auth=async(req,res,next)=>{try{const h=req.headers.authorization;if(!h?.startsWith("Bearer "))return res.status(401).json({error:"Authentication required"});const token=h.slice(7);req.user=jwt.verify(token,JWT_SECRET);next()}catch{return res.status(401).json({error:"Invalid or expired token"})}};
 const requireAdmin=(req,res,next)=>req.user?.role==="admin"?next():res.status(403).json({error:"Admin access required"});
+const requireStaff=(req,res,next)=>(req.user?.role==="admin"||req.user?.role==="writer")?next():res.status(403).json({ok:false,error:"Staff access required"});
 const syncArticleTags=async(articleId,tagNames)=>{
   await q("DELETE FROM article_tags WHERE article_id=$1",[articleId]);
   for(const raw of tagNames.slice(0,10)){
@@ -81,21 +82,71 @@ app.post("/api/auth/login",async(req,res)=>{
   const p=z.object({username:z.string().trim().min(1).max(80),password:z.string().min(1).max(200)}).safeParse(req.body);
   if(!p.success)return res.status(400).json({ok:false,error:"Enter your username and password."});
   if(!ADMIN_PASSWORD_HASH)return res.status(503).json({ok:false,error:"Admin login is disabled: no administrator credential is configured. Set ADMIN_PASSWORD (or ADMIN_PASSWORD_HASH) in the Render environment, then try again."});
-  const userOk=p.data.username.toLowerCase()===ADMIN_USERNAME;
-  const passOk=await bcrypt.compare(p.data.password,ADMIN_PASSWORD_HASH);
-  if(!userOk||!passOk){loginFailed(ip);return res.status(401).json({ok:false,error:"Invalid username or password."})}
-  const user={id:0,name:"NextBit Admin",email:ADMIN_USERNAME,role:"admin",status:"active"};
-  const token=jwt.sign(user,JWT_SECRET,{expiresIn:"7d"});
-  return respond(res,{user,token});
+  // 1) Environment administrator
+  if(p.data.username.toLowerCase()===ADMIN_USERNAME&&ADMIN_PASSWORD_HASH){
+    const passOk=await bcrypt.compare(p.data.password,ADMIN_PASSWORD_HASH);
+    if(passOk){
+      const user={id:0,name:"NextBit Admin",email:ADMIN_USERNAME,role:"admin",status:"active"};
+      const token=jwt.sign(user,JWT_SECRET,{expiresIn:"7d"});
+      return respond(res,{user,token});
+    }
+  }
+  // 2) Staff accounts in the users table (news writers created by the admin)
+  if(hasDatabase()){
+    try{
+      const row=(await q("SELECT id,name,email,password_hash,role,status FROM users WHERE LOWER(email)=LOWER($1) LIMIT 1",[p.data.username])).rows[0];
+      if(row&&row.status==="active"&&(row.role==="admin"||row.role==="writer")){
+        const passOk=await bcrypt.compare(p.data.password,row.password_hash);
+        if(passOk){
+          await q("UPDATE users SET last_login_at=NOW() WHERE id=$1",[row.id]);
+          const user={id:row.id,name:row.name,email:row.email,role:row.role,status:row.status};
+          const token=jwt.sign(user,JWT_SECRET,{expiresIn:"7d"});
+          return respond(res,{user,token});
+        }
+      }
+    }catch(e){console.error("login lookup",e?.message)}
+  }
+  loginFailed(ip);return res.status(401).json({ok:false,error:"Invalid username or password."});
 });
 app.get("/api/auth/me",auth,(req,res)=>{
-  if(req.user?.role!=="admin")return res.status(403).json({ok:false,error:"Admin access only"});
-  return respond(res,{id:0,name:"NextBit Admin",email:ADMIN_USERNAME,role:"admin",status:"active"});
+  const u=req.user||{};
+  if(u.role!=="admin"&&u.role!=="writer")return res.status(403).json({ok:false,error:"Staff access only"});
+  return respond(res,{id:u.id??0,name:u.name||"NextBit Admin",email:u.email||ADMIN_USERNAME,role:u.role,status:u.status||"active"});
 });
+// ---- News writers (admin-managed staff accounts) ----
+app.post("/api/admin/writers",auth,requireAdmin,async(req,res)=>{
+  if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline."});
+  const p=z.object({name:z.string().trim().min(2).max(80),email:z.string().trim().email().max(160),password:z.string().min(8).max(200)}).safeParse(req.body);
+  if(!p.success)return res.status(400).json({ok:false,error:"Enter a name, a valid email and a password of at least 8 characters."});
+  try{
+    const hash=await bcrypt.hash(p.data.password,10);
+    const row=(await q("INSERT INTO users (name,email,password_hash,role,status) VALUES ($1,$2,$3,'writer','active') RETURNING id,name,email,role,status",[p.data.name,p.data.email.toLowerCase(),hash])).rows[0];
+    return respond(res,row);
+  }catch(e){
+    if(String(e.message).includes("duplicate"))return res.status(409).json({ok:false,error:"An account with that email already exists."});
+    return res.status(500).json({ok:false,error:"Could not create the writer account."});
+  }
+});
+app.get("/api/admin/writers",auth,requireAdmin,async(_req,res)=>{
+  if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline."});
+  const rows=(await q("SELECT id,name,email,role,status,last_login_at,created_at FROM users WHERE role='writer' ORDER BY created_at DESC")).rows;
+  return respond(res,rows);
+});
+app.delete("/api/admin/writers/:id",auth,requireAdmin,async(req,res)=>{
+  if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline."});
+  await q("DELETE FROM users WHERE id=$1 AND role='writer'",[req.params.id]);
+  return respond(res,{deleted:true});
+});
+app.get("/api/writer/articles",auth,requireStaff,async(req,res)=>{
+  if(!hasDatabase())return respond(res,[]);
+  const rows=(await q("SELECT id,slug,category,title,summary,status,published_at,created_at,image_url FROM articles WHERE author=$1 ORDER BY created_at DESC LIMIT 100",[req.user?.name||""])).rows;
+  return respond(res,rows);
+});
+
 app.get("/api/admin/overview",auth,requireAdmin,async(_req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline. Restore Supabase, then try again."});const[articles,users,subscribers,contacts,events,comments,bookmarks,recent]=await Promise.all([q("SELECT COUNT(*)::int AS count,COUNT(*) FILTER(WHERE status='published')::int AS published,COUNT(*) FILTER(WHERE status='draft')::int AS drafts FROM articles"),q("SELECT COUNT(*)::int AS count FROM users"),q("SELECT COUNT(*)::int AS count FROM newsletter_subscribers"),q("SELECT COUNT(*)::int AS count FROM contact_messages WHERE status='new'"),q("SELECT COUNT(*)::int AS count FROM analytics_events"),q("SELECT COUNT(*)::int AS count FROM comments WHERE hidden=FALSE"),q("SELECT COUNT(*)::int AS count FROM bookmarks"),q("SELECT c.id,c.body,c.author_name,c.created_at,a.title AS article_title FROM comments c LEFT JOIN articles a ON a.id=c.article_id ORDER BY c.created_at DESC LIMIT 5")]);return respond(res,{articles:articles.rows[0],users:users.rows[0].count,subscribers:subscribers.rows[0].count,newContacts:contacts.rows[0].count,events:events.rows[0].count,comments:comments.rows[0].count,bookmarks:bookmarks.rows[0].count,recentComments:recent.rows})});
 app.get("/api/admin/articles",auth,requireAdmin,async(_req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline. Restore Supabase, then try again."});const r=await q("SELECT a.id,a.slug,a.category,a.title,a.summary,a.body,a.image_url,a.source_url,a.author,a.status,a.verified,a.published_at,a.created_at,COALESCE((SELECT array_agg(t.name ORDER BY t.name) FROM article_tags at JOIN tags t ON t.id=at.tag_id WHERE at.article_id=a.id),'{}') AS tags FROM articles a ORDER BY a.created_at DESC LIMIT 200");return respond(res,r.rows)});
 const extractOgImage=async(url)=>{const c=new AbortController();const t=setTimeout(()=>c.abort(),9000);try{const resp=await fetch(String(url),{signal:c.signal,headers:{"user-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36",accept:"text/html"},redirect:"follow"});if(!resp.ok)return null;const html=(await resp.text()).slice(0,400000);const m=html.match(/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/i)||html.match(/<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']/i)||html.match(/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']/i)||html.match(/<img[^>]+src=["\']([^"\']+)["\']/i);if(!m)return null;try{return new URL(m[1],String(url)).href}catch{return m[1]}}catch{return null}finally{clearTimeout(t)}};
-app.post("/api/admin/articles",auth,requireAdmin,async(req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline. Restore Supabase, then try again."});const p=articleSchema.safeParse(req.body);if(!p.success)return res.status(400).json({ok:false,error:"Invalid article payload"});const a=p.data;const id=randomUUID();let img=a.image_url||null;if(!img&&a.source_url)img=await extractOgImage(a.source_url)||null;try{const r=await q("INSERT INTO articles(id,slug,category,title,summary,body,image_url,source_url,author,status,verified,published_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CASE WHEN $10='published' THEN NOW() ELSE NULL END) RETURNING id,slug,category,title,summary,body,image_url,source_url,author,status,verified,published_at,created_at",[id,a.slug,a.category,a.title,a.summary,a.body,img,a.source_url||null,a.author,a.status,a.verified]);await syncArticleTags(id,a.tags);return respond(res,r.rows[0],201)}catch(e){if(e.code==="23505")return res.status(409).json({ok:false,error:"Article slug already exists"});throw e}});
+app.post("/api/admin/articles",auth,requireStaff,async(req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline. Restore Supabase, then try again."});const p=articleSchema.safeParse(req.body);if(!p.success)return res.status(400).json({ok:false,error:"Invalid article payload"});const a=p.data;const id=randomUUID();let img=a.image_url||null;if(!img&&a.source_url)img=await extractOgImage(a.source_url)||null;try{const r=await q("INSERT INTO articles(id,slug,category,title,summary,body,image_url,source_url,author,status,verified,published_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CASE WHEN $10='published' THEN NOW() ELSE NULL END) RETURNING id,slug,category,title,summary,body,image_url,source_url,author,status,verified,published_at,created_at",[id,a.slug,a.category,a.title,a.summary,a.body,img,a.source_url||null,a.author,a.status,a.verified]);await syncArticleTags(id,a.tags);return respond(res,r.rows[0],201)}catch(e){if(e.code==="23505")return res.status(409).json({ok:false,error:"Article slug already exists"});throw e}});
 app.put("/api/admin/articles/:id",auth,requireAdmin,async(req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline. Restore Supabase, then try again."});const p=articleSchema.safeParse(req.body);if(!p.success)return res.status(400).json({ok:false,error:"Invalid article payload"});const a=p.data;let img=a.image_url||null;if(!img&&a.source_url)img=await extractOgImage(a.source_url)||null;const r=await q("UPDATE articles SET slug=$1,category=$2,title=$3,summary=$4,body=$5,image_url=$6,source_url=$7,author=$8,status=$9,verified=$10,published_at=CASE WHEN $9='published' THEN COALESCE(published_at,NOW()) ELSE NULL END WHERE id=$11 RETURNING id,slug,category,title,summary,body,image_url,source_url,author,status,verified,published_at,created_at",[a.slug,a.category,a.title,a.summary,a.body,img,a.source_url||null,a.author,a.status,a.verified,req.params.id]);if(!r.rowCount)return res.status(404).json({ok:false,error:"Article not found"});await syncArticleTags(req.params.id,a.tags);return respond(res,r.rows[0])});
 app.delete("/api/admin/articles/:id",auth,requireAdmin,async(req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline. Restore Supabase, then try again."});const r=await q("DELETE FROM articles WHERE id=$1 RETURNING id",[req.params.id]);if(!r.rowCount)return res.status(404).json({ok:false,error:"Article not found"});return respond(res,{deleted:true,id:req.params.id})});
 app.get("/api/admin/users",auth,requireAdmin,async(_req,res)=>{if(!hasDatabase())return res.status(503).json({ok:false,error:"The database is offline. Restore Supabase, then try again."});const r=await q("SELECT id,name,email,role,status,last_login_at,created_at FROM users ORDER BY created_at DESC LIMIT 500");return respond(res,r.rows)});
@@ -122,6 +173,7 @@ app.use("/api",(await import("./community.mjs")).default);
 app.use("/api",(await import("./platform.mjs")).default);
 app.use("/api",(await import("./mailer.mjs")).default);
 app.use("/api",(await import("./settings.mjs")).default);
+app.use("/api",(await import("./content.mjs")).default);
 // OAuth (Google/GitHub) sign-in removed: the site is admin-only.
 // Shareable article URLs with dynamic OpenGraph/Twitter meta.
 // The SPA still uses hash routing; this non-hash URL exists for link previews.
@@ -141,5 +193,11 @@ app.get("/article/:idOrSlug",async(req,res,next)=>{
 // HTML is never cached (visitors and the admin always get the current build);
 // hashed assets are immutable and cache for a year.
 app.use(express.static(dist,{etag:true,maxAge:"1y",immutable:true,setHeaders:(res,p)=>{if(p.endsWith(".html")){res.setHeader("cache-control","no-cache");res.setHeader("expires","0")}}}));app.use((req,res,next)=>{if(req.path.startsWith("/api/"))return next();res.sendFile(path.join(dist,"index.html"))});app.use("/api",(req,res)=>res.status(404).json({ok:false,error:"API route not found"}));app.use((err,_req,res,_next)=>{console.error(err);if(err&&((err.code==="ENOTFOUND"||err.code==="ECONNREFUSED"||err.code==="ETIMEDOUT"||err.code==="ECIRCUITBREAKER"||err.code==="28P01"||/pooler\.supabase\.com|supabase\.com|password was rejected|password authentication failed|authentication failures/i.test(String(err.message))))){const authIssue=/password|authentication|28P01|ECIRCUITBREAKER/i.test(String(err.message));return res.status(503).json({ok:false,error:authIssue?"The database rejected its password, so this section cannot load or save. Update the database credential in Render (DATABASE_URL or SUPABASE_DB_PASSWORD), then try again.":"The database is offline. Restore Supabase, then try again."});}res.status(500).json({ok:false,error:"Internal server error"})});
-setInterval(()=>{maybeSendWeeklyDigest()},30*60*1000);setTimeout(()=>{maybeSendWeeklyDigest()},60*1000);
+setInterval(()=>{maybeSendWeeklyDigest()},30*60*1000);
+// Weekly automatic refreshes: devices catalogue (Wikipedia clone) + GitHub best repos.
+const PORT_FOR_SELF=process.env.PORT||10000;
+const weeklyDevices=async()=>{try{const m=await import("./content.mjs");const out=await m.syncDevices();console.log("[NextBit] devices synced:",out.synced)}catch(e){console.error("[NextBit] devices sync failed:",e?.message)}};
+const weeklyGithub=async()=>{try{await fetch(`http://127.0.0.1:${PORT_FOR_SELF}/api/github/trending?refresh=1`);console.log("[NextBit] github best repos refreshed")}catch(e){console.error("[NextBit] github refresh failed:",e?.message)}};
+setTimeout(()=>{weeklyDevices();weeklyGithub()},120*1000);
+setInterval(()=>{weeklyDevices();weeklyGithub()},7*24*60*60*1000);setTimeout(()=>{maybeSendWeeklyDigest()},60*1000);
 let dbReady=await initDb();setInterval(async()=>{if(!dbReady){try{dbReady=await initDb()}catch(error){console.error("[NextBit] database retry failed",error)}}},60000);app.listen(PORT,"0.0.0.0",()=>console.log(`[NextBit] listening on 0.0.0.0:${PORT}; database=${dbReady?"ready":"not-ready"}`));
