@@ -2,6 +2,10 @@
 
 NextBit Updates is a technology-intelligence platform for ICT and electronics news, global ICT roadmaps, projects, software engineering, AI, cybersecurity, hardware, robotics and African technology. It is **not a teaching/course platform**: roadmaps are navigation maps for ICT career and technology fields.
 
+## Planned product expansion
+
+The next requested product expansion is documented in [the Devices, universal CMS, weekly GitHub curation and News Writers requirements](docs/DEVICES_CMS_GITHUB_CURATION_NEWS_WRITERS_REQUIREMENTS.md). This is a product specification; these capabilities are **not yet implemented or deployed**. The document defines the intended navigation changes, admin workflows, source/usage safeguards, scheduled curation, writer permissions, security expectations and acceptance criteria.
+
 ## Stack
 - Frontend: React 19, TypeScript, Vite, Tailwind CSS v4 and modern CSS3.
 - Backend: Node.js 20+, Express, PostgreSQL, JWT and bcrypt.
