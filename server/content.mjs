@@ -25,16 +25,39 @@ const wrap = (fn) => (req, res, next) => fn(req, res, next).catch((e) => {
 /* ---------- Devices catalogue ---------- */
 const WIKI = "https://en.wikipedia.org/w/api.php";
 const CATEGORIES = [
-  ["Smartphones", "flagship smartphone 2026"],
-  ["Smartphones", "new Android phone"],
-  ["Laptops & PCs", "laptop computer"],
-  ["Laptops & PCs", "desktop computer"],
-  ["TVs", "smart TV OLED"],
-  ["Tablets", "tablet computer"],
-  ["Wearables", "smartwatch"],
-  ["Audio", "wireless headphones"],
-  ["Consoles", "video game console"],
-  ["Cameras", "digital camera mirrorless"],
+  ["Smartphones", "iPhone 17 Pro"],
+  ["Smartphones", "Samsung Galaxy S25 Ultra"],
+  ["Smartphones", "Google Pixel 10"],
+  ["Smartphones", "Xiaomi 15"],
+  ["Smartphones", "OnePlus 13"],
+  ["Smartphones", "Samsung Galaxy A56"],
+  ["Smartphones", "Tecno Camon"],
+  ["Smartphones", "Infinix Note"],
+  ["Laptops & PCs", "MacBook Pro"],
+  ["Laptops & PCs", "MacBook Air"],
+  ["Laptops & PCs", "Dell XPS 13"],
+  ["Laptops & PCs", "ThinkPad X1 Carbon"],
+  ["Laptops & PCs", "Surface Laptop"],
+  ["Laptops & PCs", "HP Spectre"],
+  ["Laptops & PCs", "Asus ROG"],
+  ["Laptops & PCs", "Raspberry Pi 5"],
+  ["TVs", "LG OLED TV"],
+  ["TVs", "Samsung QLED"],
+  ["TVs", "Sony Bravia"],
+  ["Tablets", "iPad Pro"],
+  ["Tablets", "Samsung Galaxy Tab"],
+  ["Tablets", "Surface Pro"],
+  ["Wearables", "Apple Watch"],
+  ["Wearables", "Samsung Galaxy Watch"],
+  ["Wearables", "Garmin Forerunner"],
+  ["Audio", "AirPods Pro"],
+  ["Audio", "Sony WH-1000XM5"],
+  ["Audio", "Bose QuietComfort"],
+  ["Consoles", "PlayStation 5"],
+  ["Consoles", "Xbox Series X and Series S"],
+  ["Consoles", "Nintendo Switch"],
+  ["Cameras", "Canon EOS R"],
+  ["Cameras", "Sony Alpha 7"],
 ];
 
 async function wikiSearch(term) {
@@ -45,15 +68,20 @@ async function wikiSearch(term) {
   return Object.values(j?.query?.pages || {});
 }
 
+const GENERIC = /^(History of|List of|Comparison of|Outline of|Glossary of|Timeline of|Category:|Portal:)/i;
+
 export async function syncDevices() {
   if (!hasDatabase()) return { synced: 0, note: "database offline" };
+  // The catalogue is fully auto-generated, so clear the previous snapshot before refilling
+  // (this also removes generic encyclopedia articles cloned by older search terms).
+  try { await q("DELETE FROM devices"); } catch (e) { console.warn("[devices] purge failed:", e?.message); }
   let synced = 0;
   for (const [category, term] of CATEGORIES) {
     try {
       const pages = await wikiSearch(term);
       for (const p of pages) {
         const name = String(p.title || "").trim();
-        if (!name || /^List of|^Category:/.test(name)) continue;
+        if (!name || GENERIC.test(name)) continue;
         const image = p.thumbnail?.source || null;
         const summary = String(p.extract || "").replace(/\s+/g, " ").slice(0, 420);
         if (!summary) continue;
