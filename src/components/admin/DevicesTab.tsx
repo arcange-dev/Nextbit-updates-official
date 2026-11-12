@@ -10,10 +10,13 @@ export default function DevicesTab(props: any) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [form, setForm] = useState({ title: "", org: "", kind: "Program", region: "Africa", url: "", deadline: "" });
+  const [writers, setWriters] = useState<any[]>([]);
+  const [wf, setWf] = useState({ name: "", email: "", password: "" });
 
   const load = () => {
     api.devices().then((d: any) => setDevices(d?.items || [])).catch(() => {});
     api.jobs().then((d: any) => setJobs(d || [])).catch(() => {});
+    api.adminWriters(token).then((d: any) => setWriters(d || [])).catch(() => {});
   };
   useEffect(() => { if (token) load(); }, [token]);
 
@@ -38,6 +41,22 @@ export default function DevicesTab(props: any) {
       load();
     } catch (e: any) { setMsg(e?.message || "Could not add it."); }
     setBusy(false);
+  };
+
+  const addWriter = async () => {
+    if (!wf.name.trim() || !wf.email.trim() || wf.password.length < 8) { setMsg("Enter a name, a valid email and a password of at least 8 characters."); return; }
+    setBusy(true); setMsg("");
+    try {
+      await api.createWriter(token, wf);
+      setWf({ name: "", email: "", password: "" });
+      setMsg("Writer account created. Send them the email and password to sign in.");
+      load();
+    } catch (e: any) { setMsg(e?.message || "Could not create the writer."); }
+    setBusy(false);
+  };
+
+  const removeWriter = async (id: string) => {
+    try { await api.deleteWriter(token, id); setWriters((l) => l.filter((x) => String(x.id) !== String(id))); } catch { setMsg("Could not delete that writer."); }
   };
 
   const removeJob = async (id: string) => {
@@ -108,6 +127,36 @@ export default function DevicesTab(props: any) {
             </div>
           ))}
           {!jobs.length && <p className="text-xs text-zinc-500">No admin-added opportunities yet.</p>}
+        </div>
+      </div>
+
+      <div className="glass-card p-6">
+        <div className="font-mono text-[9px] text-orange">NEWS WRITERS</div>
+        <h2 className="mt-1 font-display text-2xl font-bold">Writer accounts</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          Create login credentials for a news writer. They sign in at /#/login with their email and password and get the
+          writer studio: write and publish their own stories with image upload. No other admin access.
+        </p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <input value={wf.name} onChange={(e) => setWf({ ...wf, name: e.target.value })} placeholder="Full name"
+            className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-orange/50" />
+          <input value={wf.email} onChange={(e) => setWf({ ...wf, email: e.target.value })} placeholder="Email (their login)"
+            className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-orange/50" />
+          <input value={wf.password} onChange={(e) => setWf({ ...wf, password: e.target.value })} placeholder="Password (min 8 chars)" type="text"
+            className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-orange/50" />
+        </div>
+        <button onClick={addWriter} disabled={busy} className="liquid-button mt-3 px-5 py-2 text-sm disabled:opacity-50">Create writer</button>
+        <div className="mt-4 grid gap-2">
+          {writers.map((w) => (
+            <div key={w.id} className="flex items-center justify-between gap-3 rounded-xl border border-line px-3 py-2 text-sm">
+              <div>
+                <b>{w.name}</b>
+                <span className="ml-2 text-xs text-zinc-500">{w.email} · {w.last_login_at ? "last login " + new Date(w.last_login_at).toLocaleDateString() : "never signed in"}</span>
+              </div>
+              <button onClick={() => removeWriter(w.id)} className="text-zinc-400 hover:text-red-500" aria-label={"Delete " + w.name}><Trash2 size={14} /></button>
+            </div>
+          ))}
+          {!writers.length && <p className="text-xs text-zinc-500">No writer accounts yet.</p>}
         </div>
       </div>
     </div>
