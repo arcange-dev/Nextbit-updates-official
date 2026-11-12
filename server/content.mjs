@@ -62,9 +62,9 @@ export async function syncDevices() {
   try { await q("DELETE FROM devices"); } catch (e) { console.warn("[devices] purge failed:", e?.message); }
   let synced = 0;
   for (const [category, term] of CATEGORIES) {
-    await new Promise((r) => setTimeout(r, 180));
+    await new Promise((r) => setTimeout(r, 1100));
     try {
-      const pages = await wikiSearch(term).catch(async () => { await new Promise((r) => setTimeout(r, 800)); return wikiSearch(term); });
+      const pages = await wikiSearch(term).catch(async () => { await new Promise((r) => setTimeout(r, 2500)); return wikiSearch(term); });
       for (const p of pages) {
         const name = String(p.title || "").trim();
         if (!name || GENERIC.test(name)) continue;
