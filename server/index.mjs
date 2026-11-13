@@ -197,7 +197,7 @@ setInterval(()=>{maybeSendWeeklyDigest()},30*60*1000);
 // Weekly automatic refreshes: devices catalogue (Wikipedia clone) + GitHub best repos.
 const PORT_FOR_SELF=process.env.PORT||10000;
 const weeklyDevices=async()=>{try{const m=await import("./content.mjs");const out=await m.syncDevices();console.log("[NextBit] devices synced:",out.synced)}catch(e){console.error("[NextBit] devices sync failed:",e?.message)}};
-const weeklyGithub=async()=>{try{await fetch(`http://127.0.0.1:${PORT_FOR_SELF}/api/github/trending?refresh=1`);console.log("[NextBit] github best repos refreshed")}catch(e){console.error("[NextBit] github refresh failed:",e?.message)}};
+const weeklyGithub=async()=>{try{const m=await import("./github.mjs");const out=await m.warmTrends();console.log("[NextBit] github best repos refreshed:",`${out.warmed}/${out.total} fields`)}catch(e){console.error("[NextBit] github refresh failed:",e?.message)}};
 setTimeout(()=>{weeklyDevices();weeklyGithub()},120*1000);
-setInterval(()=>{weeklyDevices();weeklyGithub()},7*24*60*60*1000);setTimeout(()=>{maybeSendWeeklyDigest()},60*1000);
+setInterval(()=>{weeklyGithub()},6*60*60*1000);setInterval(()=>{weeklyDevices()},7*24*60*60*1000);setTimeout(()=>{maybeSendWeeklyDigest()},60*1000);
 let dbReady=await initDb();setInterval(async()=>{if(!dbReady){try{dbReady=await initDb()}catch(error){console.error("[NextBit] database retry failed",error)}}},60000);app.listen(PORT,"0.0.0.0",()=>console.log(`[NextBit] listening on 0.0.0.0:${PORT}; database=${dbReady?"ready":"not-ready"}`));
