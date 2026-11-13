@@ -87,7 +87,7 @@ export default function WriterStudio({ token, user, onSignOut }: { token: string
         </div>
 
         <div className="glass-card h-fit p-6">
-          <div className="font-mono text-[9px] text-orange">MY STORIES</div>
+          <div className="flex items-center justify-between"><div className="font-mono text-[9px] text-orange">MY STORIES</div><div className="font-mono text-[9px] uppercase tracking-widest text-zinc-500">{mine.filter((a) => a.status === "published").length} live · {mine.filter((a) => a.status !== "published").length} drafts</div></div>
           {!mine.length && <p className="mt-3 text-sm text-zinc-500">No stories yet.</p>}
           <div className="mt-3 grid gap-2">
             {mine.map((a) => (
