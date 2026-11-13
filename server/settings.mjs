@@ -111,6 +111,14 @@ const schema = z.object({
   topicsLink: z.string().trim().min(1).max(120).default("Choose your topics"),
   signupPlaceholder: z.string().trim().min(2).max(120).default("you@example.com"),
   signupCta: z.string().trim().min(1).max(40).default("Join"),
+  creatorName: z.string().trim().max(120).default(""),
+  creatorTitle: z.string().trim().max(160).default(""),
+  creatorBio: z.string().trim().max(1200).default(""),
+  creatorPhoto: z.string().trim().max(600).default(""),
+  creatorGithub: z.string().trim().max(300).default(""),
+  creatorX: z.string().trim().max(300).default(""),
+  creatorLinkedin: z.string().trim().max(300).default(""),
+  creatorInstagram: z.string().trim().max(300).default(""),
 });
 
 /* Public: the whole site reads branding/colors from here. */
